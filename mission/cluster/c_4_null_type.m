@@ -42,16 +42,16 @@ for i=1:length(gradB(:,1))
     if threshold==100
         constraint(i,1)=false;
     else
-    if err_4C(i,2) <= threshold
-        if eigVal_err(i,2) <= threshold
-            constraint(i,1)=false;
+        if err_4C(i,2) <= threshold
+            if eigVal_err(i,2) <= threshold
+                constraint(i,1)=false;
+            else
+                constraint(i,1)=true;
+                
+            end
         else
             constraint(i,1)=true;
-            
         end
-    else
-        constraint(i,1)=true;
-    end
     end
 end
 t=gradB(:,1);
@@ -109,4 +109,4 @@ for i=1:length(t(:,1))
     Nulls.unknown=unknown;
 end
 
-   
+
