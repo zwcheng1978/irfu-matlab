@@ -43,7 +43,8 @@ else
     threshold=varargin{2};
 end
 %First the magn. field and location of the s/c's need to be
-%synchronised and resampled to the same time.
+%synchronised and resampled to the same time if there's no NaN values.
+if  isempty(isnan(B1(:,1)))
 B2=irf_resamp(B2,B1);
 B3=irf_resamp(B3,B1);
 B4=irf_resamp(B4,B1);
@@ -51,6 +52,7 @@ R1=irf_resamp(R1,B1);
 R2=irf_resamp(R2,B1);
 R3=irf_resamp(R3,B1);
 R4=irf_resamp(R4,B1);
+end
 
 %Calculates the gradB used in the taylor expansion B0=(B1+B2+B3+B4)/4
 gradB=c_4_grad('R?','B?','grad');
