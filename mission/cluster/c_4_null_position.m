@@ -1,13 +1,14 @@
-function [constraint,Null_Position, c_4_limits,dRmin,Null_Type]=c_4_null_position(B1,B2,B3,B4,R1,R2,R3,R4,varargin)
+function [constraint,nullPosition,C4limits,dRmin,NullType]=c_4_null_position(R1,R2,R3,R4,B1,B2,B3,B4,varargin)
 %C_4_NULL_POSITION - Calculates the null position using 4 spacecraft technique
 %
 %This function calculates the null position by assuming that the B-field in
 %the vicinity of the null can be determined by considering a Taylor
 %expansion of the lowest order of B about the null.
 %
-%   [constraint,Null_Position, c_4_limits,dRmin,Null_Type]=c_4_null_position(B1,B2,B3,B4,R1,R2,R3,R4);
-%   [constraint,Null_Position, c_4_limits,dRmin,Null_Type]=c_4_null_position(B1,B2,B3,B4,R1,R2,R3,R4, 'threshold',threshold_value);
+%   [constraint,nullPosition,C4limits,dRmin,NullType]=C_4_NULL_POSITION(R1,R2,R3,R4,B1,B2,B3,B4);
+%   [constraint,Null_Position, c_4_limits,dRmin,Null_Type]=C_4_NULL_POSITION(R1,R2,R3,R4,B1,B2,B3,B4, 'threshold',threshold_value);
 %   -threshold=100 means no restriction
+%   OUTPUT
 %   Null_position = [Time xn yn zn]
 %   constraint is a logical vector that shows true when the threshold
 %   dRmin = [Time dRmin] Gives the minimum distance to the null point
@@ -16,8 +17,11 @@ function [constraint,Null_Position, c_4_limits,dRmin,Null_Type]=c_4_null_positio
 %   of all satellites at each time tag.
 %   Null_Type is a structure containing each nulltype identified at each
 %   time tag.
-%   B? is the B-field measured at satellite ?
-%   R? is the satellite ? position in GSM coordinate system
+%   INPUT
+%   B? = the B-field measured at satellite ?: column 1 - time
+%   column 2-4 B-field in x,y,z direction
+%   R? = the satellite ? position in GSM coordinate system: column 1 - time
+%   column 2-4 satellite position in x,y,z direction
 %
 % Important: Time tags should be included with the vectors and threshold
 % should be given in percentage not deciamalform
@@ -43,8 +47,8 @@ else
     threshold=varargin{2};
 end
 %First the magn. field and location of the s/c's need to be
-%synchronised and resampled to the same time if there's no NaN values.
-if  isempty(isnan(B1(:,1)))
+%synchronised and resampled to the same time
+%if  isempty(isnan(B1(:,1)))
 B2=irf_resamp(B2,B1);
 B3=irf_resamp(B3,B1);
 B4=irf_resamp(B4,B1);
@@ -52,9 +56,9 @@ R1=irf_resamp(R1,B1);
 R2=irf_resamp(R2,B1);
 R3=irf_resamp(R3,B1);
 R4=irf_resamp(R4,B1);
-end
+%end
 
-%Calculates the gradB used in the taylor expansion B0=(B1+B2+B3+B4)/4
+%Calculates the gradB used in the taylor expansion
 gradB=c_4_grad('R?','B?','grad');
 
 %Calculate the null position
@@ -62,13 +66,17 @@ dR1=zeros(length(gradB(:,1)),4);
 dR2=zeros(length(gradB(:,1)),4);
 dR3=zeros(length(gradB(:,1)),4);
 dR4=zeros(length(gradB(:,1)),4);
-%First need to calculate how far from each satellite the null is using Newton-Rapson method
+%First need to calculate how far from each satellite the null is using
+%Taylor Expansion
 for i=1:length(gradB(:,1))
-    deltaB_null=reshape(gradB(i,2:end),3,3);
-    dR1(i,2:4)=B1(i,2:4)/(deltaB_null');  %Row calculations
-    dR2(i,2:4)=B2(i,2:4)/(deltaB_null');
-    dR3(i,2:4)=B3(i,2:4)/(deltaB_null');
-    dR4(i,2:4)=B4(i,2:4)/(deltaB_null');
+    if all(isnan(gradB(i,2:end)))
+        continue
+    end
+    deltaBnull=reshape(gradB(i,2:end),3,3);
+    dR1(i,2:4)=B1(i,2:4)/(deltaBnull');  %Row calculations
+    dR2(i,2:4)=B2(i,2:4)/(deltaBnull');
+    dR3(i,2:4)=B3(i,2:4)/(deltaBnull');
+    dR4(i,2:4)=B4(i,2:4)/(deltaBnull');
 end
 %Add time
 Time=B1(:,1);
@@ -85,18 +93,16 @@ dRmag4=irf_abs(dR4);
 
 %The minimum distance to the null (which ever satellite that has it)
 dRmin(:,2)=min([dRmag1(:,5) dRmag2(:,5) dRmag3(:,5) dRmag4(:,5)], [], 2);
-dRmin(:,1)=Time; %adds time
+dRmin(:,1)=Time; %adds the time
 
-%Null position. They all give the same answer since the null is in one
-%position. Calculating each just to check that they do give the same
-%position
-Rn_1=irf_add(1,R1,-1,dR1);  %R1-dR1 etc.
+%Null position
+Rn1=irf_add(1,R1,-1,dR1);  %R1-dR1
 
 %Null coordinates
-xn=Rn_1(:,2);
-yn=Rn_1(:,3);
-zn=Rn_1(:,4);
-Rn= [xn yn zn];
+xn=Rn1(:,2);
+yn=Rn1(:,3);
+zn=Rn1(:,4);
+Rn=[xn yn zn];
 %Calculate the minimum and maximum values for all s/c's in each direction
 %to see distance between s/c's
 %Taylor's expansion unreliable distance more than one ion inertial length
@@ -109,7 +115,7 @@ minZ=min(([R1(:,4) R2(:,4) R3(:,4) R4(:,4)]),[],2);
 maxZ=max(([R1(:,4) R2(:,4) R3(:,4) R4(:,4)]),[],2);
 
 %Check which type the nulls are
-[constraint,Nulls]=c_4_null_type(threshold,B1,B2,B3,B4,R1,R2,R3,R4);
+[constraint,Nulls]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold);
 %threshold=0.25;
 %[eigA,eigB,eigAs,eigBs,eigo,eigx,unknown]=null_type_threshold(B1,B2,B3,B4,R1,R2,R3,R4,threshold)
 
@@ -117,57 +123,56 @@ maxZ=max(([R1(:,4) R2(:,4) R3(:,4) R4(:,4)]),[],2);
 %(the minimum distance from all s/c to the null)
 
 % min and max for all s/c's
-minX(constraint,:)=NaN;
-maxX(constraint,:)=NaN;
-minY(constraint,:)=NaN;
-maxY(constraint,:)=NaN;
-minZ(constraint,:)=NaN;
-maxZ(constraint,:)=NaN;
+minX(~constraint,:)=NaN;
+maxX(~constraint,:)=NaN;
+minY(~constraint,:)=NaN;
+maxY(~constraint,:)=NaN;
+minZ(~constraint,:)=NaN;
+maxZ(~constraint,:)=NaN;
 
 %Spacecraft max,min position
-c_4_limits.minX=minX;
-c_4_limits.maxX=maxX;
-c_4_limits.minY=minY;
-c_4_limits.maxY=maxY;
-c_4_limits.minZ=minZ;
-c_4_limits.maxZ=maxZ;
+C4limits.minX=minX;
+C4limits.maxX=maxX;
+C4limits.minY=minY;
+C4limits.maxY=maxY;
+C4limits.minZ=minZ;
+C4limits.maxZ=maxZ;
 
 %The null positions
 Time=B1(:,1);
-Time(constraint,:)=NaN;
-Rn(constraint,:)=NaN;
-Null_Position=[Time Rn];
+Rn(~constraint,:)=NaN;
+nullPosition=[Time Rn];
 
 %dRmin
-dRmin(constraint,:)=NaN;
+dRmin(~constraint,2)=NaN;
 
 %A
-A_null=dRmin;
-A_null(Nulls.eigA,:)=NaN;
+distanceANull=dRmin;
+distanceANull(~Nulls.eigA,2)=NaN;
 %B
-B_null=dRmin;
-B_null(Nulls.eigB,:)=NaN;
+distanceBNull=dRmin;
+distanceBNull(~Nulls.eigB,2)=NaN;
 %X
-x_null=dRmin;
-x_null(Nulls.eigx,:)=NaN;
+distanceXNull=dRmin;
+distanceXNull(~Nulls.eigx,2)=NaN;
 %Bs
-Bs_null=dRmin;
-Bs_null(Nulls.eigBs,:)=NaN;
+distanceBsNull=dRmin;
+distanceBsNull(~Nulls.eigBs,2)=NaN;
 %As
-As_null=dRmin;
-As_null(Nulls.eigAs,:)=NaN;
+distanceAsNull=dRmin;
+distanceAsNull(~Nulls.eigAs,2)=NaN;
 %O
-o_null=dRmin;
-o_null(Nulls.eigo,:)=NaN;
+distanceONull=dRmin;
+distanceONull(~Nulls.eigo,2)=NaN;
 %Unknown type
-unknown_null=dRmin;
-unknown_null(Nulls.unknown,:)=NaN;
+distanceUnknownNull=dRmin;
+distanceUnknownNull(~Nulls.unknown,2)=NaN;
 
-Null_Type.A=A_null;
-Null_Type.B=B_null;
-Null_Type.As=As_null;
-Null_Type.Bs=Bs_null;
-Null_Type.unknown=unknown_null;
-Null_Type.x=x_null;
-Null_Type.o=o_null;
+NullType.A=distanceANull;
+NullType.B=distanceBNull;
+NullType.As=distanceAsNull;
+NullType.Bs=distanceBsNull;
+NullType.unknown=distanceUnknownNull;
+NullType.x=distanceXNull;
+NullType.o=distanceONull;
 end
