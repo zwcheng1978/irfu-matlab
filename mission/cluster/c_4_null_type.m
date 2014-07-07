@@ -53,7 +53,6 @@ for i=1:length(gradB(:,1))
     else
         if err_4C(i,2) <= threshold && eigVal_err(i,2) <= threshold
                 constraint(i,1)=true;
-                
         else
             constraint(i,1)=false;
         end
@@ -63,7 +62,7 @@ eigvec(~constraint,:)= NaN;
 
 %Determine the null type by using eigenvalues
 %Ideal case
-isAllEigenvaluesReal = (sum(imag(eigvec),2)==0);
+isAllEigenvaluesReal = max(imag(eigvec),[],2) == 0;
 signOfRealpart=sign(real(eigvec));
 nRealNegativeEigenvalues = sum(signOfRealpart==-1,2);
 aType=(nRealNegativeEigenvalues == 2);
