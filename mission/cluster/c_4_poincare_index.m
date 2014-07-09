@@ -53,10 +53,10 @@ lx=size(B1,1); %lx becomes the number of rows in B1
 %Create the zero matrix that will be used to map each point from xyz to
 %By,Bx,Bz space
 
-Map_sc1=zeros(lx,3);
-Map_sc2=zeros(lx,3);
-Map_sc3=zeros(lx,3);
-Map_sc4=zeros(lx,3);
+Map_sc1= zeros(lx,3);
+Map_sc2= zeros(lx,3);
+Map_sc3= zeros(lx,3);
+Map_sc4= zeros(lx,3);
 % map the points from x,y,z to magnetic three-dimensional field space (Bx,By,Bz instead of
 % x,y,z) (ref. Greene, J.M. 1990)
 % A null point in configuration space (xyz satellites) corresponds to the
