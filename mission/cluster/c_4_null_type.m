@@ -1,4 +1,4 @@
-function [constraint,Nulls]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold)
+function [Nulls,constraint]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold)
 %C_4_NULL_TYPE - Determines the type of null
 %
 %This function determines what type of null is in each data point which
@@ -12,7 +12,7 @@ function [constraint,Nulls]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold)
 %   restrictions wasn't fulfilled this will be later used to NaN those data
 %   points
 %   INPUT
-%   threshold = tolerance value for accepting data points in percentage. 
+%   threshold = tolerance value for accepting data points in percentage.
 %   Default=40, threshold=100 means no restriction.
 %   B? = the B-field measured at satellite ?: column 1 - time
 %   column 2-4 B-field in x,y,z direction

@@ -1,4 +1,4 @@
-function [constraint,nullPosition,C4limits,dRmin,dRmax,NullTypeMaxDistance,NullTypeMinDistance]=c_4_null_position(R1,R2,R3,R4,B1,B2,B3,B4,varargin)
+function [nullPosition,C4limits,dRmin,NullType,constraint]=c_4_null_position(R1,R2,R3,R4,B1,B2,B3,B4,varargin)
 %C_4_NULL_POSITION - Calculates the null position using 4 spacecraft technique
 %
 %This function calculates the null position by assuming that the B-field in
@@ -15,13 +15,9 @@ function [constraint,nullPosition,C4limits,dRmin,dRmax,NullTypeMaxDistance,NullT
 %   constraint is a logical vector that shows true when the threshold
 %   dRmin = [Time dRmin] Gives the minimum distance to the null point
 %   looking from all satellites
-%   dRmax = [Time dRmax] Gives the maximum distance to the null point
-%   looking from all satellites
 %   C4limits is a structure containing the maxmimum and minimum positions
 %   of all satellites at each time tag.
-%   NullTypeMaxDistance is a structure containing each nulltype identified at each
-%   time tag for the maximum distance from the satellites to the nullpoint.
-%   NullTypeMinDistance is a structure containing each nulltype identified at each
+%   NullType is a structure containing each nulltype identified at each
 %   time tag for the minimum distance from the satellites to the nullpoint.
 %   INPUT
 %   B? = the B-field measured at satellite ?: column 1 - time
@@ -99,10 +95,7 @@ dRmag4 = irf_abs(dR4);
 
 %The minimum distance to the null (which ever satellite that has it)
 dRmin(:,2) = min([dRmag1(:,5) dRmag2(:,5) dRmag3(:,5) dRmag4(:,5)], [], 2);
-dRmin(:,1) = Time; %adds the time
-
-dRmax(:,2) = max([dRmag1(:,5) dRmag2(:,5) dRmag3(:,5) dRmag4(:,5)], [], 2);
-dRmax(:,1) = Time; %adds the time
+dRmin(:,1) = Time;
 
 %Null position
 Rn1 = irf_add(1,R1,-1,dR1);  %R1-dR1
@@ -124,7 +117,7 @@ minZ = min(([R1(:,4) R2(:,4) R3(:,4) R4(:,4)]),[],2);
 maxZ = max(([R1(:,4) R2(:,4) R3(:,4) R4(:,4)]),[],2);
 
 %Check which type the nulls are
-[constraint,Nulls] = c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold);
+[Nulls,constraint] = c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold);
 %threshold=0.25;
 %[eigA,eigB,eigAs,eigBs,eigo,eigx,unknown]=null_type_threshold(B1,B2,B3,B4,R1,R2,R3,R4,threshold)
 
@@ -177,44 +170,11 @@ distanceONull(~Nulls.eigo,2)          = NaN;
 distanceUnknownNull                   = dRmin;
 distanceUnknownNull(~Nulls.unknown,2) = NaN;
 
-NullTypeMinDistance.A       = distanceANull;
-NullTypeMinDistance.B       = distanceBNull;
-NullTypeMinDistance.As      = distanceAsNull;
-NullTypeMinDistance.Bs      = distanceBsNull;
-NullTypeMinDistance.unknown = distanceUnknownNull;
-NullTypeMinDistance.x       = distanceXNull;
-NullTypeMinDistance.o       = distanceONull;
-
-%dRmax
-dRmax(~constraint,2)= NaN;
-
-%A
-distanceANull                         = dRmax;
-distanceANull(~Nulls.eigA,2)          = NaN;
-%B
-distanceBNull                         = dRmax;
-distanceBNull(~Nulls.eigB,2)          = NaN;
-%X
-distanceXNull                         = dRmax;
-distanceXNull(~Nulls.eigx,2)          = NaN;
-%Bs
-distanceBsNull                        = dRmax;
-distanceBsNull(~Nulls.eigBs,2)        = NaN;
-%As
-distanceAsNull                        = dRmax;
-distanceAsNull(~Nulls.eigAs,2)        = NaN;
-%O
-distanceONull                         = dRmax;
-distanceONull(~Nulls.eigo,2)          = NaN;
-%Unknown type
-distanceUnknownNull                   = dRmax;
-distanceUnknownNull(~Nulls.unknown,2) = NaN;
-
-NullTypeMaxDistance.A       = distanceANull;
-NullTypeMaxDistance.B       = distanceBNull;
-NullTypeMaxDistance.As      = distanceAsNull;
-NullTypeMaxDistance.Bs      = distanceBsNull;
-NullTypeMaxDistance.unknown = distanceUnknownNull;
-NullTypeMaxDistance.x       = distanceXNull;
-NullTypeMaxDistance.o       = distanceONull;
+NullType.A       = distanceANull;
+NullType.B       = distanceBNull;
+NullType.As      = distanceAsNull;
+NullType.Bs      = distanceBsNull;
+NullType.unknown = distanceUnknownNull;
+NullType.x       = distanceXNull;
+NullType.o       = distanceONull;
 end
