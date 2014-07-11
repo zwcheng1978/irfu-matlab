@@ -1,14 +1,13 @@
 function [nullPosition,C4limits,dRmin,NullType,constraint]=c_4_null_position(R1,R2,R3,R4,B1,B2,B3,B4,varargin)
-%C_4_NULL_POSITION - Calculates the null position using 4 spacecraft technique
+%C_4_NULL_POSITION - Calculates the null position within the tetrahedron using 4 spacecraft technique
 %
-%This function calculates the null position by assuming that the B-field in
-%the vicinity of the null can be determined by considering a Taylor
+%This function calculates the null position within the tetrahedron made up 
+%of the satellites by assuming that the B-field in the vicinity of the 
+%null can be determined by considering a Taylor
 %expansion of the lowest order of B about the null.
 %
-%   [constraint,nullPosition,C4limits,dRmin,dRmax,NullTypeMaxDistance,NullTypeMinDistance]...
-%   =C_4_NULL_POSITION(R1,R2,R3,R4,B1,B2,B3,B4);
-%   [constraint,nullPosition,C4limits,dRmin,dRmax,NullTypeMaxDistance,NullTypeMinDistance]...
-%   =C_4_NULL_POSITION(R1,R2,R3,R4,B1,B2,B3,B4, 'threshold',threshold_value);
+%   [nullPosition,C4limits,dRmin,NullType,constraint]=C_4_NULL_POSITION(R1,R2,R3,R4,B1,B2,B3,B4);
+%   [nullPosition,C4limits,dRmin,NullType,constraint]=C_4_NULL_POSITION(R1,R2,R3,R4,B1,B2,B3,B4, 'threshold',threshold_value);
 %   -threshold=100 means no restriction
 %   OUTPUT
 %   nullPosition = [Time xn yn zn]
@@ -48,6 +47,7 @@ if isempty(varargin) == true
 else
     threshold = varargin{2};
 end
+
 %First the magn. field and location of the s/c's need to be
 %synchronised and resampled to the same time
 %if  isempty(isnan(B1(:,1)))
@@ -124,6 +124,14 @@ maxZ = max(([R1(:,4) R2(:,4) R3(:,4) R4(:,4)]),[],2);
 %For each eigenvalue corresponding to the tolerance level (the two errors less or equal to 40%) break out their corresponding time and dR value
 %(the minimum distance from all s/c to the null)
 
+d_i=1000; %Ion intertial length
+disp('Sorting based on the null located within the s/c tetrahedron thus having a maximum length of one ion inertial length');
+sortNull=dRmin(:,2) <= d_i;
+sortNullDx=Rn1(:,2) >= minX & Rn1(:,2) <= maxX;
+sortNullDy=Rn1(:,3) >= minY & Rn1(:,3) <= maxY;
+sortNullDz=Rn1(:,4) >= minZ & Rn1(:,4) <= maxZ;
+sortdr= sortNull & sortNullDx & sortNullDy & sortNullDz;
+
 % min and max for all s/c's
 minX(~constraint,:) = NaN;
 maxX(~constraint,:) = NaN;
@@ -143,6 +151,7 @@ C4limits.maxZ = maxZ;
 %The null positions
 Time=B1(:,1);
 Rn(~constraint,:) = NaN;
+Rn(~sortdr,:)     = NaN;
 nullPosition      = [Time Rn];
 
 %dRmin
@@ -151,24 +160,31 @@ dRmin(~constraint,2)= NaN;
 %A
 distanceANull                         = dRmin;
 distanceANull(~Nulls.eigA,2)          = NaN;
+distanceANull(~sortdr,2)              = NaN;
 %B
 distanceBNull                         = dRmin;
 distanceBNull(~Nulls.eigB,2)          = NaN;
+distanceBNull(~sortdr,2)              = NaN;
 %X
 distanceXNull                         = dRmin;
 distanceXNull(~Nulls.eigx,2)          = NaN;
+distanceXNull(~sortdr,2)              = NaN;
 %Bs
 distanceBsNull                        = dRmin;
 distanceBsNull(~Nulls.eigBs,2)        = NaN;
+distanceBsNull(~sortdr,2)             = NaN;
 %As
 distanceAsNull                        = dRmin;
 distanceAsNull(~Nulls.eigAs,2)        = NaN;
+distanceAsNull(~sortdr,2)             = NaN;
 %O
 distanceONull                         = dRmin;
 distanceONull(~Nulls.eigo,2)          = NaN;
+distanceONull(~sortdr,2)              = NaN;
 %Unknown type
 distanceUnknownNull                   = dRmin;
 distanceUnknownNull(~Nulls.unknown,2) = NaN;
+distanceUnknownNull(~sortdr,2)        = NaN;
 
 NullType.A       = distanceANull;
 NullType.B       = distanceBNull;
