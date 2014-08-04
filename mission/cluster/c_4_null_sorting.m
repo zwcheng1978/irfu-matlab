@@ -122,35 +122,6 @@ R2=irf_resamp(R2,B1);
 R3=irf_resamp(R3,B1);
 R4=irf_resamp(R4,B1);
 
-%Bx=[B1(:,2) B2(:,2) B3(:,2) B4(:,2)];
-%By=[B1(:,3) B2(:,3) B3(:,3) B4(:,3)];
-%Bz=[B1(:,4) B2(:,4) B3(:,4) B4(:,4)];
-%signOfBxfields = sign(Bx);
-%allNegBxfieldsHaveSameSign = all(signOfBxfields==-1,2);
-%allPosBxfieldsHaveSameSign = all(signOfBxfields==1,2);
-%signOfByfields = sign(By);
-%allNegByfieldsHaveSameSign = all(signOfByfields==-1,2);
-%allPosByfieldsHaveSameSign = all(signOfByfields==1,2);
-%allNegBzfieldsHaveSameSign = all(signOfBzfields==-1,2);
-%allPosBzfieldsHaveSameSign = all(signOfBzfields==1,2);
-%allBfieldsNotAroundZero = allNegBxfieldsHaveSameSign | allPosBxfieldsHaveSameSign ...
-%| allNegByfieldsHaveSameSign| allPosByfieldsHaveSameSign | ...
-%
-%B1(allBfieldsNotAroundZero,2:4)=NaN;
-%B2(allBfieldsNotAroundZero,2:4)=NaN;
-%B3(allBfieldsNotAroundZero,2:4)=NaN;
-%B4(allBfieldsNotAroundZero,2:4)=NaN;
-
-%if sum(isnan(B1(:,2)))==length(B1(:,2)) %If all B values aren't around zero then 
-    %no point in trying to find a null
-    %continue
-%end
-
-%R1(allBfieldsNotAroundZero,2:4)=NaN;
-%R2(allBfieldsNotAroundZero,2:4)=NaN;
-%R3(allBfieldsNotAroundZero,2:4)=NaN;
-%R4(allBfieldsNotAroundZero,2:4)=NaN;
-
 gradB=c_4_grad('R?','B?','grad');
 disp('Calculating null position');
 %Calculate the null position
