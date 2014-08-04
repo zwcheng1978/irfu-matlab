@@ -1,4 +1,4 @@
-function [nullPosition,C4limits,dRmin,NullType,constraint]=c_4_null_position(R1,R2,R3,R4,B1,B2,B3,B4,varargin)
+function [nullPosition,C4limits,dRmin,NullType,Requirement]=c_4_null_position(R1,R2,R3,R4,B1,B2,B3,B4,varargin)
 %C_4_NULL_POSITION - Calculates the null position within the tetrahedron using 4 spacecraft technique
 %
 %This function calculates the null position within the tetrahedron made up 
@@ -6,12 +6,17 @@ function [nullPosition,C4limits,dRmin,NullType,constraint]=c_4_null_position(R1,
 %null can be determined by considering a Taylor
 %expansion of the lowest order of B about the null.
 %
-%   [nullPosition,C4limits,dRmin,NullType,constraint]=C_4_NULL_POSITION(R1,R2,R3,R4,B1,B2,B3,B4);
-%   [nullPosition,C4limits,dRmin,NullType,constraint]=C_4_NULL_POSITION(R1,R2,R3,R4,B1,B2,B3,B4, 'threshold',threshold_value);
+%   [nullPosition,C4limits,dRmin,NullType,Requirement]=C_4_NULL_POSITION(R1,R2,R3,R4,B1,B2,B3,B4);
+%   [nullPosition,C4limits,dRmin,NullType,Requirement]=C_4_NULL_POSITION(R1,R2,R3,R4,B1,B2,B3,B4, 'threshold',threshold_value);
 %   -threshold=100 means no restriction
 %   OUTPUT
 %   nullPosition = [Time xn yn zn]
-%   constraint is a logical vector that shows true when the threshold
+%   Requirement is a structure containing the two restrictions used on the
+%   data. BfieldandEigenvalueslessthanchosenpercentage is if the
+%   eigenvalues and Bfield values for the datapoints are below the chosen
+%   percentage value (default=40%). DistancewithinSCconfiguration is the
+%   logical vector showing true (1) if the null point is within the SC
+%   configuration.
 %   dRmin = [Time dRmin] Gives the minimum distance to the null point
 %   looking from all satellites
 %   C4limits is a structure containing the maxmimum and minimum positions
@@ -193,4 +198,8 @@ NullType.Bs      = distanceBsNull;
 NullType.unknown = distanceUnknownNull;
 NullType.x       = distanceXNull;
 NullType.o       = distanceONull;
+
+Requirement.BfieldandEigenvalueslessthanchosenpercentage=constraint;
+Requirement.DistancewithinSCconfiguration=sortdr;
+
 end
