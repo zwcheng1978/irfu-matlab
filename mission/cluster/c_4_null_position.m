@@ -21,8 +21,8 @@ function [nullPosition,C4limits,dRmin,NullType,Requirement]=c_4_null_position(R1
 %   looking from all satellites
 %   C4limits is a structure containing the maxmimum and minimum positions
 %   of all satellites at each time tag.
-%   NullType is a structure containing each nulltype identified at each
-%   time tag for the minimum distance from the satellites to the nullpoint.
+%   NullType is a structure containing two structures where each nulltype identified at each
+%   time tag is given in the minimum distance from the satellites to the nullpoint and in the exact position (x,y,z).
 %   INPUT
 %   B? = the B-field measured at satellite ?: column 1 - time
 %   column 2-4 B-field in x,y,z direction
@@ -166,38 +166,68 @@ dRmin(~constraint,2)= NaN;
 distanceANull                         = dRmin;
 distanceANull(~Nulls.eigA,2)          = NaN;
 distanceANull(~sortdr,2)              = NaN;
+
+positionANull                         = Rn;
+positionANull(~Nulls.eigA,:)          = NaN;
+
 %B
 distanceBNull                         = dRmin;
 distanceBNull(~Nulls.eigB,2)          = NaN;
 distanceBNull(~sortdr,2)              = NaN;
+
+positionBNull                         = Rn;
+positionBNull(~Nulls.eigB,:)          = NaN;
 %X
 distanceXNull                         = dRmin;
 distanceXNull(~Nulls.eigx,2)          = NaN;
 distanceXNull(~sortdr,2)              = NaN;
+
+positionXNull                         = Rn;
+positionXNull(~Nulls.eigx,:)          = NaN;
 %Bs
 distanceBsNull                        = dRmin;
 distanceBsNull(~Nulls.eigBs,2)        = NaN;
 distanceBsNull(~sortdr,2)             = NaN;
+
+positionBsNull                        = Rn;
+positionBsNull(~Nulls.eigBs,:)        = NaN;
 %As
 distanceAsNull                        = dRmin;
 distanceAsNull(~Nulls.eigAs,2)        = NaN;
 distanceAsNull(~sortdr,2)             = NaN;
+
+positionAsNull                        = Rn;
+positionAsNull(~Nulls.eigAs,:)        = NaN;
 %O
 distanceONull                         = dRmin;
 distanceONull(~Nulls.eigo,2)          = NaN;
 distanceONull(~sortdr,2)              = NaN;
+
+positionONull                         = Rn;
+positionONull(~Nulls.eigo,:)          = NaN;
 %Unknown type
 distanceUnknownNull                   = dRmin;
 distanceUnknownNull(~Nulls.unknown,2) = NaN;
 distanceUnknownNull(~sortdr,2)        = NaN;
 
-NullType.A       = distanceANull;
-NullType.B       = distanceBNull;
-NullType.As      = distanceAsNull;
-NullType.Bs      = distanceBsNull;
-NullType.unknown = distanceUnknownNull;
-NullType.x       = distanceXNull;
-NullType.o       = distanceONull;
+positionUnknownNull                         = Rn;
+positionUnknownNull(~Nulls.unknown,:)       = NaN;
+
+NullType.distance.A       = distanceANull;
+NullType.distance.B       = distanceBNull;
+NullType.distance.As      = distanceAsNull;
+NullType.distance.Bs      = distanceBsNull;
+NullType.distance.unknown = distanceUnknownNull;
+NullType.distance.x       = distanceXNull;
+NullType.distance.o       = distanceONull;
+
+NullType.position.A       = positionANull;
+NullType.position.B       = positionBNull;
+NullType.position.As      = positionAsNull;
+NullType.position.Bs      = positionBsNull;
+NullType.position.unknown = positionUnknownNull;
+NullType.position.x       = positionXNull;
+NullType.position.o       = positionONull;
 
 Requirement.BfieldandEigenvalueslessthanchosenpercentage=constraint;
 Requirement.DistancewithinSCconfiguration=sortdr;
