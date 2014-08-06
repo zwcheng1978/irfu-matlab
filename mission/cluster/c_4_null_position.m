@@ -7,8 +7,9 @@ function [nullPosition,C4limits,dRmin,NullType,Requirement]=c_4_null_position(R1
 %expansion of the lowest order of B about the null.
 %
 %   [nullPosition,C4limits,dRmin,NullType,Requirement]=C_4_NULL_POSITION(R1,R2,R3,R4,B1,B2,B3,B4);
-%   [nullPosition,C4limits,dRmin,NullType,Requirement]=C_4_NULL_POSITION(R1,R2,R3,R4,B1,B2,B3,B4, 'threshold',threshold_value);
-%   -threshold=100 means no restriction
+%   [nullPosition,C4limits,dRmin,NullType,Requirement]=C_4_NULL_POSITION(R1,R2,R3,R4,B1,B2,B3,B4, threshold_value,scseparation_value);
+%   -threshold=100 means no restriction. Default value for the satellite
+%   separation is 1000km. The value needs to be given in km.
 %   OUTPUT
 %   nullPosition = [Time xn yn zn]
 %   Requirement is a structure containing the two restrictions used on the
@@ -49,8 +50,10 @@ elseif nargin > 10
 end
 if isempty(varargin) == true
     threshold = 40;
+    scseparation=1000; %Ion intertial length
 else
-    threshold = varargin{2};
+    threshold = varargin{1};
+    scseparation=varargin{2};
 end
 
 %First the magn. field and location of the s/c's need to be
@@ -128,10 +131,8 @@ maxZ = max(([R1(:,4) R2(:,4) R3(:,4) R4(:,4)]),[],2);
 
 %For each eigenvalue corresponding to the tolerance level (the two errors less or equal to 40%) break out their corresponding time and dR value
 %(the minimum distance from all s/c to the null)
-
-d_i=1000; %Ion intertial length
 disp('Sorting based on the null located within the s/c tetrahedron thus having a maximum length of one ion inertial length');
-sortNull=dRmin(:,2) <= d_i;
+sortNull=dRmin(:,2) <= scseparation;
 sortNullDx=Rn1(:,2) >= minX & Rn1(:,2) <= maxX;
 sortNullDy=Rn1(:,3) >= minY & Rn1(:,3) <= maxY;
 sortNullDz=Rn1(:,4) >= minZ & Rn1(:,4) <= maxZ;
