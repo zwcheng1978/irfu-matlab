@@ -9,7 +9,7 @@ function [Nulls,constraint]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold)
 %   OUTPUT
 %   Nulls is a structure containing logical vectors for each null type
 %   constraint is a logical vector that shows true when the threshold
-%   restrictions wasn't fulfilled this will be later used to NaN those data
+%   restrictions are fulfilled this will be later used to NaN those data
 %   points
 %   INPUT
 %   threshold = tolerance value for accepting data points in percentage.
