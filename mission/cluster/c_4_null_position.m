@@ -1,4 +1,4 @@
-function [nullPosition,C4limits,dRmin,NullType,Requirement]=c_4_null_position(R1,R2,R3,R4,B1,B2,B3,B4,varargin)
+function [nullPosition,C4limits,dRmin,NullType,Requirement,Rnull]=c_4_null_position(R1,R2,R3,R4,B1,B2,B3,B4,varargin)
 %C_4_NULL_POSITION - Calculates the null position within the tetrahedron using 4 spacecraft technique
 %
 %This function calculates the null position within the tetrahedron made up 
@@ -9,7 +9,9 @@ function [nullPosition,C4limits,dRmin,NullType,Requirement]=c_4_null_position(R1
 %   [nullPosition,C4limits,dRmin,NullType,Requirement]=C_4_NULL_POSITION(R1,R2,R3,R4,B1,B2,B3,B4);
 %   [nullPosition,C4limits,dRmin,NullType,Requirement]=C_4_NULL_POSITION(R1,R2,R3,R4,B1,B2,B3,B4, threshold_value,scseparation_value);
 %   -threshold=100 means no restriction. Default value for the satellite
-%   separation is 1000km. The value needs to be given in km.
+%   separation is 1000km. The value needs to be given in km. If a threshold
+%   or sc separation value is given you need to also give the other value
+%   for the program to work.
 %   OUTPUT
 %   nullPosition = [Time xn yn zn]
 %   Requirement is a structure containing the two restrictions used on the
@@ -47,6 +49,9 @@ elseif nargin < 8
     error('Too few input values. See usage: help c_4_null_position')
 elseif nargin > 10
     error('Too many input values. See usage: help c_4_null_position')
+end
+if length(varargin)==1
+    error('Too few input values. See usage: help c_4_null_position')
 end
 if isempty(varargin) == true
     threshold = 40;
@@ -107,7 +112,9 @@ dRmin(:,1) = Time;
 
 %Null position
 Rn1 = irf_add(1,R1,-1,dR1);  %R1-dR1
-
+Rn2 = irf_add(1,R2,-1,dR2);
+Rn3 = irf_add(1,R3,-1,dR3);
+Rn4 = irf_add(1,R4,-1,dR4);
 %Null coordinates
 xn = Rn1(:,2);
 yn = Rn1(:,3);
@@ -160,6 +167,14 @@ Rn(~constraint,:) = NaN;
 Rn(~sortdr,:)     = NaN;
 nullPosition      = [Time Rn];
 
+Rn1(~constraint,:) = NaN;
+Rn1(~sortdr,:)     = NaN;
+Rn2(~constraint,:) = NaN;
+Rn2(~sortdr,:)     = NaN;
+Rn3(~constraint,:) = NaN;
+Rn3(~sortdr,:)     = NaN;
+Rn4(~constraint,:) = NaN;
+Rn4(~sortdr,:)     = NaN;
 %dRmin
 dRmin(~constraint,2)= NaN;
 
@@ -233,4 +248,8 @@ NullType.position.o       = positionONull;
 Requirement.BfieldandEigenvalueslessthanchosenpercentage=constraint;
 Requirement.DistancewithinSCconfiguration=sortdr;
 
+Rnull.Rn1=Rn1;
+Rnull.Rn2=Rn2;
+Rnull.Rn3=Rn3;
+Rnull.Rn4=Rn4;
 end
