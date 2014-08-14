@@ -26,12 +26,12 @@ if n<4
     error('Time tag must be included in each input vector. Please do so and try again.')
 end
 if nargin==0
-    help c_4_null_position;
+    help c_4_poincare_index;
     return;
 elseif nargin < 4
-    error('Too few input values. See usage: help poincare_index_3D')
+    error('Too few input values. See usage: help c_4_poincare_index')
 elseif nargin>4
-    error('Too many input values. See usage: help poincare_index_3D')
+    error('Too many input values. See usage: help c_4_poincare_index')
 end
 
 %Each vector contains time tags so all vectors needs to be resampled to
