@@ -72,7 +72,18 @@ R2 = irf_resamp(R2,B1);
 R3 = irf_resamp(R3,B1);
 R4 = irf_resamp(R4,B1);
 %end
+%Check which type the nulls are
+[Nulls,constraint] = c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold);
 
+if sum(imag(B1(:,2)))~=0|sum(imag(B1(:,3)))~=0|sum(imag(B1(:,4)))~=0|...
+        sum(imag(B2(:,2)))~=0|sum(imag(B2(:,2)))~=0|sum(imag(B2(:,2)))~=0|...
+        sum(imag(B3(:,2)))~=0|sum(imag(B3(:,2)))~=0|sum(imag(B3(:,2)))~=0|...
+        sum(imag(B4(:,2)))~=0|sum(imag(B4(:,2)))~=0|sum(imag(B4(:,2)))~=0
+B1=real(B1);
+B2=real(B2);
+B3=real(B3);
+B4=real(B4);
+end
 %Calculates the gradB used in the taylor expansion
 gradB = c_4_grad('R?','B?','grad');
 
@@ -93,6 +104,11 @@ for i=1:length(gradB(:,1))
     dR3(i,2:4) = B3(i,2:4)/(deltaBnull');
     dR4(i,2:4) = B4(i,2:4)/(deltaBnull');
 end
+dR1=real(dR1);
+dR2=real(dR2);
+dR3=real(dR3);
+dR4=real(dR4);
+
 %Add time
 Time=B1(:,1);
 dR1(:,1)=Time;
@@ -130,11 +146,6 @@ minY = min(([R1(:,3) R2(:,3) R3(:,3) R4(:,3)]),[],2);
 maxY = max(([R1(:,3) R2(:,3) R3(:,3) R4(:,3)]),[],2);
 minZ = min(([R1(:,4) R2(:,4) R3(:,4) R4(:,4)]),[],2);
 maxZ = max(([R1(:,4) R2(:,4) R3(:,4) R4(:,4)]),[],2);
-
-%Check which type the nulls are
-[Nulls,constraint] = c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold);
-%threshold=0.25;
-%[eigA,eigB,eigAs,eigBs,eigo,eigx,unknown]=null_type_threshold(B1,B2,B3,B4,R1,R2,R3,R4,threshold)
 
 %For each eigenvalue corresponding to the tolerance level (the two errors less or equal to 40%) break out their corresponding time and dR value
 %(the minimum distance from all s/c to the null)

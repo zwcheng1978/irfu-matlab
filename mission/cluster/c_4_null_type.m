@@ -29,10 +29,9 @@ function [Nulls,constraint]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold)
 gradB=c_4_grad(R1,R2,R3,R4,B1,B2,B3,B4);
 
 %Error in percentage - estimate if linear interpolation is valid to use
-[j,divB] = c_4_j('R?','B?');
-magn_current=irf_abs(j);
-jmag=magn_current(:,[1 5]); %fifth column contains the abs value of j (sqrt(j(:,2).^2+j(:,3).^2+j(:,4).^2)) for each time tag
-err_4C=irf_multiply(1,divB,1,jmag,-1); %Essentially does divB/jmag
+[divB,B]=c_4_grad('R?','B?','div');
+%jmag=magn_current(:,[1 5]); %fifth column contains the abs value of j (sqrt(j(:,2).^2+j(:,3).^2+j(:,4).^2)) for each time tag
+err_4C=irf_multiply(1,real(divB),1,[divB(:,1) real(max(gradB(:,2:end),[],2))],-1); %Essentially does divB/jmag
 err_4C(:,2)=abs(err_4C(:,2))*100;
 
 % Only interested in the time intervalls when the two errors (eigenerr and
