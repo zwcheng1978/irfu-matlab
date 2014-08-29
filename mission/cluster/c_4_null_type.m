@@ -1,4 +1,4 @@
-function [Nulls,constraint]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold)
+function [Nulls,Eigenvalues,constraint]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold)
 %C_4_NULL_TYPE - Determines the type of null
 %
 %This function determines what type of null is in each data point which
@@ -45,6 +45,13 @@ for i=1:length(gradB(:,1))
     end
     deltaB_null     = reshape(gradB(i,2:end),3,3);
     D               = eig(deltaB_null);
+    if abs(imag(D(1,1))) <= 1E-16 
+        D(1,1)=real(D(1,1));
+    elseif abs(imag(D(2,1))) <= 1E-16
+        D(2,1)=real(D(2,1));
+    elseif abs(imag(D(3,1))) <= 1E-16 
+        D(3,1)=real(D(3,1));
+    end
     eigvec(i,:)     = [D(1,1) D(2,1) D(3,1)];
     eigVal_err(i,2) = abs(real(D(1,1)+D(2,1)+D(3,1)))/max(abs([real(D(1,1)), real(D(2,1)), real(D(3,1))])) * 100;
     if threshold == 100
@@ -61,21 +68,26 @@ eigvec(~constraint,:)= NaN;
 
 %Determine the null type by using eigenvalues
 %Ideal case
-isAllEigenvaluesReal     = max(imag(eigvec),[],2) == 0;
+isAllEigenvaluesReal     = abs(max(imag(eigvec),[],2)) == 0;
 signOfRealpart           = sign(real(eigvec));
+signOfImaginarypart      = sign(imag(eigvec));
+nImaginaryNegativeEigenvalues = sum(signOfImaginarypart==-1,2);
+nImaginaryPositiveEigenvalues = sum(signOfImaginarypart==+1,2);
 nRealNegativeEigenvalues = sum(signOfRealpart==-1,2);
-aType                    = (nRealNegativeEigenvalues == 2);
-bType                    = (nRealNegativeEigenvalues == 1);
+unknowntype              = (nImaginaryNegativeEigenvalues == 3 |sum(signOfImaginarypart,2) ~=0 | nImaginaryPositiveEigenvalues == 3);
+aType                    = nRealNegativeEigenvalues == 2 ;
+bType                    = nRealNegativeEigenvalues == 1 ;
+unknownrealtype          = (nRealNegativeEigenvalues == 3) | (nRealNegativeEigenvalues == 0);
 minAbsEigenvalue         = min(abs(eigvec),[],2);
 twoDType                 = (minAbsEigenvalue == 0);
 
-eigA                     = ( isAllEigenvaluesReal & aType);
-eigAs                    = (~isAllEigenvaluesReal & aType);
-eigB                     = ( isAllEigenvaluesReal & bType);
-eigBs                    = (~isAllEigenvaluesReal & bType);
-eigx                     = ( isAllEigenvaluesReal & twoDType);
-eigo                     = (~isAllEigenvaluesReal & twoDType);
-unknown                  = (~eigA & ~eigB & ~eigAs & ~eigBs & ~eigx & ~eigo & constraint);
+eigA                     = ( isAllEigenvaluesReal & aType & ~unknowntype & ~unknownrealtype);
+eigAs                    = (~isAllEigenvaluesReal & aType & ~unknowntype & ~unknownrealtype);
+eigB                     = ( isAllEigenvaluesReal & bType & ~unknowntype & ~unknownrealtype);
+eigBs                    = (~isAllEigenvaluesReal & bType & ~unknowntype & ~unknownrealtype);
+eigx                     = ( isAllEigenvaluesReal & twoDType & ~unknowntype);
+eigo                     = (~isAllEigenvaluesReal & twoDType & ~unknowntype);
+unknown                  = (~eigA & ~eigB & ~eigAs & ~eigBs & ~eigx & ~eigo & constraint | unknowntype | unknownrealtype);
 
 Nulls.eigA=eigA;
 Nulls.eigB=eigB;
@@ -84,6 +96,13 @@ Nulls.eigBs=eigBs;
 Nulls.eigx=eigx;
 Nulls.eigo=eigo;
 Nulls.unknown=unknown;
+Eigenvalues.A=eigvec(eigA,:);
+Eigenvalues.As=eigvec(eigAs,:);
+Eigenvalues.B=eigvec(eigB,:);
+Eigenvalues.Bs=eigvec(eigBs,:);
+Eigenvalues.unknown=eigvec(unknown,:);
+Eigenvalues.o=eigvec(eigo,:);
+Eigenvalues.x=eigvec(eigx,:);
 end
 
 

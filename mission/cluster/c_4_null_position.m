@@ -1,4 +1,4 @@
-function [nullPosition,C4limits,dRmin,NullType,Requirement,Rnull]=c_4_null_position(R1,R2,R3,R4,B1,B2,B3,B4,varargin)
+function [nullPosition,C4limits,dRmin,NullType,Eigenvalues,Requirement,Rnull]=c_4_null_position(R1,R2,R3,R4,B1,B2,B3,B4,varargin)
 %C_4_NULL_POSITION - Calculates the null position within the tetrahedron using 4 spacecraft technique
 %
 %This function calculates the null position within the tetrahedron made up 
@@ -73,17 +73,8 @@ R3 = irf_resamp(R3,B1);
 R4 = irf_resamp(R4,B1);
 %end
 %Check which type the nulls are
-[Nulls,constraint] = c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold);
+[Nulls,Eigenvalues,constraint]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold);
 
-if sum(imag(B1(:,2)))~=0|sum(imag(B1(:,3)))~=0|sum(imag(B1(:,4)))~=0|...
-        sum(imag(B2(:,2)))~=0|sum(imag(B2(:,2)))~=0|sum(imag(B2(:,2)))~=0|...
-        sum(imag(B3(:,2)))~=0|sum(imag(B3(:,2)))~=0|sum(imag(B3(:,2)))~=0|...
-        sum(imag(B4(:,2)))~=0|sum(imag(B4(:,2)))~=0|sum(imag(B4(:,2)))~=0
-B1=real(B1);
-B2=real(B2);
-B3=real(B3);
-B4=real(B4);
-end
 %Calculates the gradB used in the taylor expansion
 gradB = c_4_grad('R?','B?','grad');
 
@@ -104,11 +95,6 @@ for i=1:length(gradB(:,1))
     dR3(i,2:4) = B3(i,2:4)/(deltaBnull');
     dR4(i,2:4) = B4(i,2:4)/(deltaBnull');
 end
-dR1=real(dR1);
-dR2=real(dR2);
-dR3=real(dR3);
-dR4=real(dR4);
-
 %Add time
 Time=B1(:,1);
 dR1(:,1)=Time;
@@ -188,6 +174,24 @@ Rn4(~constraint,:) = NaN;
 Rn4(~sortdr,:)     = NaN;
 %dRmin
 dRmin(~constraint,2)= NaN;
+
+%Eigenvalues
+Eigenvalues.A(~sortdr,:) = NaN;
+Eigenvalues.As(~sortdr,:) = NaN;
+Eigenvalues.B(~sortdr,:) = NaN;
+Eigenvalues.Bs(~sortdr,:) = NaN;
+Eigenvalues.x(~sortdr,:) = NaN;
+Eigenvalues.unknown(~sortdr,:) = NaN;
+Eigenvalues.o(~sortdr,:) = NaN;
+Eigenvalues.A=[Time Eigenvalues.A];
+Eigenvalues.As=[Time Eigenvalues.As];
+Eigenvalues.B=[Time Eigenvalues.B];
+Eigenvalues.Bs=[Time Eigenvalues.Bs];
+Eigenvalues.x=[Time Eigenvalues.x];
+Eigenvalues.o=[Time Eigenvalues.o];
+Eigenvalues.unknown=[Time Eigenvalues.unknown];
+
+
 
 %A
 distanceANull                         = dRmin;
