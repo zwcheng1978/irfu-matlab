@@ -96,13 +96,7 @@ Nulls.eigBs=eigBs;
 Nulls.eigx=eigx;
 Nulls.eigo=eigo;
 Nulls.unknown=unknown;
-Eigenvalues.A=eigvec(eigA,:);
-Eigenvalues.As=eigvec(eigAs,:);
-Eigenvalues.B=eigvec(eigB,:);
-Eigenvalues.Bs=eigvec(eigBs,:);
-Eigenvalues.unknown=eigvec(unknown,:);
-Eigenvalues.o=eigvec(eigo,:);
-Eigenvalues.x=eigvec(eigx,:);
+Eigenvalues=eigvec;
 end
 
 

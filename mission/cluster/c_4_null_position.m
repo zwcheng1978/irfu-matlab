@@ -73,7 +73,7 @@ R3 = irf_resamp(R3,B1);
 R4 = irf_resamp(R4,B1);
 %end
 %Check which type the nulls are
-[Nulls,Eigenvalues,constraint]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold);
+[Nulls,Eigenvaluestypes,constraint]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold);
 
 %Calculates the gradB used in the taylor expansion
 gradB = c_4_grad('R?','B?','grad');
@@ -176,22 +176,52 @@ Rn4(~sortdr,:)     = NaN;
 dRmin(~constraint,2)= NaN;
 
 %Eigenvalues
-Eigenvalues.A(~sortdr,:) = NaN;
-Eigenvalues.As(~sortdr,:) = NaN;
-Eigenvalues.B(~sortdr,:) = NaN;
-Eigenvalues.Bs(~sortdr,:) = NaN;
-Eigenvalues.x(~sortdr,:) = NaN;
-Eigenvalues.unknown(~sortdr,:) = NaN;
-Eigenvalues.o(~sortdr,:) = NaN;
-Eigenvalues.A=[Time Eigenvalues.A];
-Eigenvalues.As=[Time Eigenvalues.As];
-Eigenvalues.B=[Time Eigenvalues.B];
-Eigenvalues.Bs=[Time Eigenvalues.Bs];
-Eigenvalues.x=[Time Eigenvalues.x];
-Eigenvalues.o=[Time Eigenvalues.o];
-Eigenvalues.unknown=[Time Eigenvalues.unknown];
+Eigenvaluestypes(~sortdr,:)     = NaN;
+ttt                        =Time;
+ttt(~constraint,:)         = NaN;
+ttt(~sortdr,:)             = NaN;
 
+EigenvaluesA               = Eigenvaluestypes;
+EigenvaluesA(~Nulls.eigA,:)= NaN;
+tA                         =ttt;
+tA(~Nulls.eigA,1)          =NaN;
+Eigenvalues.A              =[tA EigenvaluesA];
 
+EigenvaluesAs               = Eigenvaluestypes;
+EigenvaluesAs(~Nulls.eigAs,:)= NaN;
+tAs                         =ttt;
+tAs(~Nulls.eigAs,1)          =NaN;
+Eigenvalues.As             =[tAs EigenvaluesAs];
+
+EigenvaluesB               = Eigenvaluestypes;
+EigenvaluesB(~Nulls.eigB,:)= NaN;
+tB                         =ttt;
+tB(~Nulls.eigB,1)          =NaN;
+Eigenvalues.B              =[tB EigenvaluesB];
+
+EigenvaluesBs               = Eigenvaluestypes;
+EigenvaluesBs(~Nulls.eigBs,:)= NaN;
+tBs                        =ttt;
+tBs(~Nulls.eigBs,1)          =NaN;
+Eigenvalues.Bs             =[tBs EigenvaluesBs];
+
+Eigenvaluesx               = Eigenvaluestypes;
+Eigenvaluesx(~Nulls.eigx,:)= NaN;
+tx                         =ttt;
+tx(~Nulls.eigx,1)          =NaN;
+Eigenvalues.x              =[tx Eigenvaluesx];
+
+Eigenvalueso               = Eigenvaluestypes;
+Eigenvalueso(~Nulls.eigo,:)= NaN;
+to                         =ttt;
+to(~Nulls.eigo,1)          =NaN;
+Eigenvalues.o              =[to Eigenvalueso];
+
+Eigenvaluesunknown              = Eigenvaluestypes;
+Eigenvaluesunknown(~Nulls.unknown,:)= NaN;
+tunknown                          =ttt;
+tunknown(~Nulls.unknown,1)          =NaN;
+Eigenvalues.unknown        =[tunknown Eigenvaluesunknown];
 
 %A
 distanceANull                         = dRmin;
