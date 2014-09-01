@@ -45,13 +45,6 @@ for i=1:length(gradB(:,1))
     end
     deltaB_null     = reshape(gradB(i,2:end),3,3);
     D               = eig(deltaB_null);
-    if abs(imag(D(1,1))) <= 1E-16 
-        D(1,1)=real(D(1,1));
-    elseif abs(imag(D(2,1))) <= 1E-16
-        D(2,1)=real(D(2,1));
-    elseif abs(imag(D(3,1))) <= 1E-16 
-        D(3,1)=real(D(3,1));
-    end
     eigvec(i,:)     = [D(1,1) D(2,1) D(3,1)];
     eigVal_err(i,2) = abs(real(D(1,1)+D(2,1)+D(3,1)))/max(abs([real(D(1,1)), real(D(2,1)), real(D(3,1))])) * 100;
     if threshold == 100
