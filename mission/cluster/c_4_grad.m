@@ -147,13 +147,8 @@ b=0.25*B.C1+0.25*B.C2+0.25*B.C3+0.25*B.C4; % estimate mean value of vector or sc
 for iC=1:4
 	id=idC{iC};
 	if isTimeSpecified
-<<<<<<< HEAD
 		ttt = irf_resamp([tR K.(id)],tB);
         K.(id) = ttt(:,2:4); % remove time column	
-=======
-		K.(id) = irf_resamp([tR K.(id)],tB);
-		K.(id)(:,1) = []; % remove time column
->>>>>>> master
 	end
 end
 
