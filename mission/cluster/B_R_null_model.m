@@ -1,5 +1,5 @@
-function [Model]=B_R_model(s,p,j)
-%B_R_model - Creates a simple model of B-field with no currents and position (R)
+function [Model]=B_R_null_model(s,p,j)
+%B_R_null_model - Creates a simple model of B-field with no currents and position (R)
 %measurements for 4 s/c's. 
 
 % This function creates a simple linear Bfield that can have either complex
@@ -24,12 +24,12 @@ function [Model]=B_R_model(s,p,j)
 % from Cluster in Oct 1 2001 
 %Keeping the s/c's stuck and moving the null instead for simplicity sake
 if nargin == 0
-    help B_R_model;
+    help B_R_null_model;
     return;
 elseif nargin < 3
-    error('Too few input values. See usage: help B_R_model')
+    error('Too few input values. See usage: help B_R_null_model')
 elseif nargin > 3
-    error('Too many input values. See usage: help B_R_model')
+    error('Too many input values. See usage: help B_R_null_model')
 end
 
 %Creates time axis
@@ -85,7 +85,7 @@ xn=x0-33.*t;
 yn=y0+25.*t;
 zn=z0+25.*t;
 Rn=[tt xn yn zn];
-%ii loops over changes in the scalar paramiter (if you want to increase or
+%ii loops over changes in the scalar parameter (if you want to increase or
 %decrease eigenvalues
 for ii=1:1%21
     %Threshold current
