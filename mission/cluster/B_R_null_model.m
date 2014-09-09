@@ -88,7 +88,7 @@ Rn=[tt xn yn zn];
 %ii loops over changes in the scalar parameter (if you want to increase or
 %decrease eigenvalues
 for ii=1:1%21
-    %Threshold current
+    %Threshold current used in B-model
     jthresh=sqrt((p-1).^2);
     %Eigenvalues
     landa1=(p+1+sqrt(jthresh.^2-j.^2))/(s*2);
