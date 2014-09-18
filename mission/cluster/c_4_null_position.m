@@ -1,4 +1,4 @@
-function [nullPosition,C4limits,dRmin,NullType,Eigenvalues,Requirement,Rnull]=c_4_null_position(R1,R2,R3,R4,B1,B2,B3,B4,varargin)
+function [nullPosition,C4limits,dRmin,NullType,Eigenvalues,Requirement,Rnull,errors]=c_4_null_position(R1,R2,R3,R4,B1,B2,B3,B4,varargin)
 %C_4_NULL_POSITION - Calculates the null position within the tetrahedron using 4 spacecraft technique
 %
 %This function calculates the null position within the tetrahedron made up 
@@ -73,7 +73,7 @@ R3 = irf_resamp(R3,B1);
 R4 = irf_resamp(R4,B1);
 %end
 %Check which type the nulls are
-[Nulls,Eigenvaluestypes,constraint]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold);
+[Nulls,Eigenvaluestypes,constraint,errors]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold);
 
 %Calculates the gradB used in the taylor expansion
 gradB = c_4_grad('R?','B?','grad');

@@ -1,4 +1,4 @@
-function [Nulls,Eigenvalues,constraint]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold)
+function [Nulls,Eigenvalues,constraint,errors]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold)
 %C_4_NULL_TYPE - Determines the type of null
 %
 %This function determines what type of null is in each data point which
@@ -29,10 +29,11 @@ function [Nulls,Eigenvalues,constraint]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,th
 gradB=c_4_grad(R1,R2,R3,R4,B1,B2,B3,B4);
 
 %Error in percentage - estimate if linear interpolation is valid to use
-[divB,B]=c_4_grad('R?','B?','div');
+[divB,~]=c_4_grad('R?','B?','div');
 %jmag=magn_current(:,[1 5]); %fifth column contains the abs value of j (sqrt(j(:,2).^2+j(:,3).^2+j(:,4).^2)) for each time tag
 err_4C=irf_multiply(1,real(divB),1,[divB(:,1) real(max(gradB(:,2:end),[],2))],-1); %Essentially does divB/jmag
 err_4C(:,2)=abs(err_4C(:,2))*100;
+err_4C(:,1)=B1(:,1);
 
 % Only interested in the time intervalls when the two errors (eigenerr and
 % curlometer error) is both lower or equal to 40%
@@ -58,7 +59,9 @@ for i=1:length(gradB(:,1))
     end
 end
 eigvec(~constraint,:)= NaN;
-
+eigVal_err(:,1)=B1(:,1);
+eigVal_err(~constraint,:)= NaN;
+err_4C(~constraint,:)= NaN;
 %Determine the null type by using eigenvalues
 %Ideal case
 isAllEigenvaluesReal     = abs(max(imag(eigvec),[],2)) == 0;
@@ -90,6 +93,8 @@ Nulls.eigx=eigx;
 Nulls.eigo=eigo;
 Nulls.unknown=unknown;
 Eigenvalues=eigvec;
+errors.eigval=eigVal_err;
+errors.curlometer=err_4C;
 end
 
 
