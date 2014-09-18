@@ -1,4 +1,4 @@
-function [Model]=B_R_null_model(s,p,j)
+function [Modeldata]=B_R_null_model(s,p,j)
 %B_R_null_model - Creates a simple model of B-field with no currents and position (R)
 %measurements for 4 s/c's. 
 
@@ -382,7 +382,7 @@ end
 % Saves data in each run incase something happens
 folder=num2str(ii);
 cd(folder)
-save('ModelldataBs.mat','Modeldata','-v7.3');
+save('ModelldataA.mat','Modeldata','-v7.3');
 cd ..
 iii
     end
@@ -480,5 +480,5 @@ s=s+50; %B %s=500;j=3;
 %s=s-50; %A
 end 
  disp('Saves data into datafile');
- save('ModelldataBs.mat','Model','-v7.3');  
+ save('ModelldataA.mat','Model','-v7.3');  
 end
