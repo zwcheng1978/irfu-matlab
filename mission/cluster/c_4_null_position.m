@@ -1,4 +1,4 @@
-function [nullPosition,C4limits,dRmin,NullType,Eigenvalues,Requirement,Rnull,errors]=c_4_null_position(R1,R2,R3,R4,B1,B2,B3,B4,varargin)
+function [nullPosition,C4limits,dRmin,NullType,Eigenvalues,index,Rnull,Requirement,errors]=c_4_null_position(R1,R2,R3,R4,B1,B2,B3,B4,varargin)
 %C_4_NULL_POSITION - Calculates the null position within the tetrahedron using 4 spacecraft technique
 %
 %This function calculates the null position within the tetrahedron made up 
@@ -71,7 +71,23 @@ R1 = irf_resamp(R1,B1);
 R2 = irf_resamp(R2,B1);
 R3 = irf_resamp(R3,B1);
 R4 = irf_resamp(R4,B1);
-%end
+% Check if there's any nulls inside the s/c tetrahedron using Poincaré
+% index
+index=c_4_poincare_index(B1,B2,B3,B4);
+negPoincare=sign(index(:,2))==-1;
+posPoincare=sign(index(:,2))==1;
+nullsFound=(negPoincare | posPoincare);
+
+B1=B1(nullsFound,:);
+B2=B2(nullsFound,:);
+B3=B3(nullsFound,:);
+B4=B4(nullsFound,:);
+
+R1=R1(nullsFound,:);
+R2=R2(nullsFound,:);
+R3=R3(nullsFound,:);
+R4=R4(nullsFound,:);
+
 %Check which type the nulls are
 [Nulls,Eigenvaluestypes,constraint,errors]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold);
 
