@@ -197,7 +197,7 @@ for ii=1:1%21
     KvotBetweenamplitudeandBtotDifference=[amplitude  ((amplitude./maxBtot))'.*100];
     
     %Calculates the nullPosition and the NullType
-   [nullPosition,~,~,NullType,~,~,~]=c_4_null_position(R1,R2,R3,R4,B1,B2,B3,B4); 
+   [nullPosition,~,~,NullType,~,~,~,~,~]=c_4_null_position(R1,R2,R3,R4,B1,B2,B3,B4); 
    
    %Here starts the saving function
     nullPositionlogical = false(length(nullPosition(:,1)),1);
