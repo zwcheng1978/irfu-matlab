@@ -73,20 +73,7 @@ R3 = irf_resamp(R3,B1);
 R4 = irf_resamp(R4,B1);
 % Check if there's any nulls inside the s/c tetrahedron using Poincaré
 % index
-index=c_4_poincare_index(B1,B2,B3,B4);
-negPoincare=sign(index(:,2))==-1;
-posPoincare=sign(index(:,2))==1;
-nullsFound=(negPoincare | posPoincare);
 
-B1=B1(nullsFound,:);
-B2=B2(nullsFound,:);
-B3=B3(nullsFound,:);
-B4=B4(nullsFound,:);
-
-R1=R1(nullsFound,:);
-R2=R2(nullsFound,:);
-R3=R3(nullsFound,:);
-R4=R4(nullsFound,:);
 
 %Check which type the nulls are
 [Nulls,Eigenvaluestypes,constraint,errors]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold);
@@ -149,6 +136,7 @@ maxY = max(([R1(:,3) R2(:,3) R3(:,3) R4(:,3)]),[],2);
 minZ = min(([R1(:,4) R2(:,4) R3(:,4) R4(:,4)]),[],2);
 maxZ = max(([R1(:,4) R2(:,4) R3(:,4) R4(:,4)]),[],2);
 
+
 %For each eigenvalue corresponding to the tolerance level (the two errors less or equal to 40%) break out their corresponding time and dR value
 %(the minimum distance from all s/c to the null)
 disp('Sorting based on the null located within the s/c tetrahedron thus having a maximum length of one ion inertial length');
@@ -157,6 +145,9 @@ sortNullDx=Rn1(:,2) >= minX & Rn1(:,2) <= maxX;
 sortNullDy=Rn1(:,3) >= minY & Rn1(:,3) <= maxY;
 sortNullDz=Rn1(:,4) >= minZ & Rn1(:,4) <= maxZ;
 sortdr= sortNull & sortNullDx & sortNullDy & sortNullDz;
+
+index(~constraint,:)=NaN;
+index(~sortdr,:)=NaN;
 
 % min and max for all s/c's
 minX(~constraint,:) = NaN;
@@ -184,10 +175,13 @@ Rn1(~constraint,:) = NaN;
 Rn1(~sortdr,:)     = NaN;
 Rn2(~constraint,:) = NaN;
 Rn2(~sortdr,:)     = NaN;
+
 Rn3(~constraint,:) = NaN;
 Rn3(~sortdr,:)     = NaN;
+
 Rn4(~constraint,:) = NaN;
 Rn4(~sortdr,:)     = NaN;
+
 %dRmin
 dRmin(~constraint,2)= NaN;
 
@@ -196,6 +190,7 @@ Eigenvaluestypes(~sortdr,:)     = NaN;
 ttt                        =Time;
 ttt(~constraint,:)         = NaN;
 ttt(~sortdr,:)             = NaN;
+
 
 EigenvaluesA               = Eigenvaluestypes;
 EigenvaluesA(~Nulls.eigA,:)= NaN;
