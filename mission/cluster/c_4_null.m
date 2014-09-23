@@ -26,7 +26,11 @@ function Nulls=c_4_null(R1,R2,R3,R4,B1,B2,B3,B4,varargin)
 %   of all satellites at each time tag.
 %   NullType is a structure containing two structures where each nulltype identified at each
 %   time tag is given in the minimum distance from the satellites to the nullpoint and in the exact position (x,y,z).
-%   INPUT
+%   Eigenvalues is a structure consisting of the lambda values and another
+%   structure with the eigenvalues of the different lamda values. Lambda 1
+%   of the lambda values coincide with the 3 first values on the first row.
+%   Lambda 2 of the lambda values coincide with the 3 middle values on the first row.
+% INPUT
 %   B? = the B-field measured at satellite ?: column 1 - time
 %   column 2-4 B-field in x,y,z direction
 %   R? = the satellite ? position in GSM coordinate system: column 1 - time
@@ -76,7 +80,7 @@ R4 = irf_resamp(R4,B1);
 
 
 %Check which type the nulls are
-[Nulls,Eigenvaluestypes,constraint,errors]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold);
+[NullsEigen,Eigenvaluestypes,Current,constraint,errors]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold);
 
 %Calculates the gradB used in the taylor expansion
 gradB = c_4_grad('R?','B?','grad');
@@ -150,6 +154,12 @@ Nulls.errors=errors;
 Nulls.index(~constraint,:)=NaN;
 Nulls.index(~sortdr,:)=NaN;
 
+Current.jParallel(~sortdr,:)=NaN;
+Nulls.current.jParallel=Current.jParallel;
+
+Current.jPerpendicular(~sortdr,:)=NaN;
+Nulls.current.jPerpendicular=Current.jPerpendicular;
+
 % min and max for all s/c's
 minX(~constraint,:) = NaN;
 maxX(~constraint,:) = NaN;
@@ -184,107 +194,138 @@ Rn4(~constraint,:) = NaN;
 Rn4(~sortdr,:)     = NaN;
 
 %dRmin
-Nulls.dRmin(~constraint,2)= NaN;
+dRmin(~constraint,2)= NaN;
 
 %Eigenvalues
-Eigenvaluestypes(~sortdr,:)     = NaN;
+Eigenvaluestypes.lambda(~sortdr,:)     = NaN;
+Eigenvaluestypes.eigenvectors.lambda1(~sortdr,:)     = NaN;
+Eigenvaluestypes.eigenvectors.lambda2(~sortdr,:)     = NaN;
+Eigenvaluestypes.eigenvectors.lambda3(~sortdr,:)     = NaN;
 ttt                        =Time;
 ttt(~constraint,:)         = NaN;
 ttt(~sortdr,:)             = NaN;
 
 
-EigenvaluesA               = Eigenvaluestypes;
-EigenvaluesA(~Nulls.eigA,:)= NaN;
+EigenvaluesA               = Eigenvaluestypes.lambda;
+EigenvaluesA(~NullsEigen.eigA,:)= NaN;
 tA                         =ttt;
-tA(~Nulls.eigA,1)          =NaN;
+tA(~NullsEigen.eigA,1)          =NaN;
 Nulls.Eigenvalues.A              =[tA EigenvaluesA];
 
-EigenvaluesAs               = Eigenvaluestypes;
-EigenvaluesAs(~Nulls.eigAs,:)= NaN;
+EigenvectorA               = [Eigenvaluestypes.eigenvectors.lambda1 Eigenvaluestypes.eigenvectors.lambda2 Eigenvaluestypes.eigenvectors.lambda3];
+EigenvectorA(~NullsEigen.eigA,:)= NaN;
+Nulls.Eigenvector.A              =[tA EigenvectorA];
+
+EigenvaluesAs               = Eigenvaluestypes.lambda;
+EigenvaluesAs(~NullsEigen.eigAs,:)= NaN;
 tAs                         =ttt;
-tAs(~Nulls.eigAs,1)          =NaN;
+tAs(~NullsEigen.eigAs,1)          =NaN;
 Nulls.Eigenvalues.As             =[tAs EigenvaluesAs];
 
-EigenvaluesB               = Eigenvaluestypes;
-EigenvaluesB(~Nulls.eigB,:)= NaN;
+EigenvectorAs               = [Eigenvaluestypes.eigenvectors.lambda1 Eigenvaluestypes.eigenvectors.lambda2 Eigenvaluestypes.eigenvectors.lambda3];
+EigenvectorAs(~NullsEigen.eigAs,:)= NaN;
+Nulls.Eigenvector.As             =[tAs EigenvectorAs];
+
+EigenvaluesB               = Eigenvaluestypes.lambda;
+EigenvaluesB(~NullsEigen.eigB,:)= NaN;
 tB                         =ttt;
-tB(~Nulls.eigB,1)          =NaN;
+tB(~NullsEigen.eigB,1)          =NaN;
 Nulls.Eigenvalues.B              =[tB EigenvaluesB];
 
-EigenvaluesBs               = Eigenvaluestypes;
-EigenvaluesBs(~Nulls.eigBs,:)= NaN;
+EigenvectorB               = [Eigenvaluestypes.eigenvectors.lambda1 Eigenvaluestypes.eigenvectors.lambda2 Eigenvaluestypes.eigenvectors.lambda3];
+EigenvectorB(~NullsEigen.eigB,:)= NaN;
+Nulls.Eigenvector.B              =[tB EigenvectorB];
+
+EigenvaluesBs               = Eigenvaluestypes.lambda;
+EigenvaluesBs(~NullsEigen.eigBs,:)= NaN;
 tBs                        =ttt;
-tBs(~Nulls.eigBs,1)          =NaN;
+tBs(~NullsEigen.eigBs,1)          =NaN;
 Nulls.Eigenvalues.Bs             =[tBs EigenvaluesBs];
 
-Eigenvaluesx               = Eigenvaluestypes;
-Eigenvaluesx(~Nulls.eigx,:)= NaN;
+EigenvectorBs               = [Eigenvaluestypes.eigenvectors.lambda1 Eigenvaluestypes.eigenvectors.lambda2 Eigenvaluestypes.eigenvectors.lambda3];
+EigenvectorBs(~NullsEigen.eigBs,:)= NaN;
+Nulls.Eigenvector.Bs              =[tB EigenvectorBs];
+
+Eigenvaluesx               = Eigenvaluestypes.lambda;
+Eigenvaluesx(~NullsEigen.eigx,:)= NaN;
 tx                         =ttt;
-tx(~Nulls.eigx,1)          =NaN;
+tx(~NullsEigen.eigx,1)          =NaN;
 Nulls.Eigenvalues.x              =[tx Eigenvaluesx];
 
-Eigenvalueso               = Eigenvaluestypes;
-Eigenvalueso(~Nulls.eigo,:)= NaN;
+Eigenvectorx               = [Eigenvaluestypes.eigenvectors.lambda1 Eigenvaluestypes.eigenvectors.lambda2 Eigenvaluestypes.eigenvectors.lambda3];
+Eigenvectorx(~NullsEigen.eigx,:)= NaN;
+Nulls.Eigenvector.x              =[tB Eigenvectorx];
+
+Eigenvalueso               = Eigenvaluestypes.lambda;
+Eigenvalueso(~NullsEigen.eigo,:)= NaN;
 to                         =ttt;
-to(~Nulls.eigo,1)          =NaN;
+to(~NullsEigen.eigo,1)          =NaN;
 Nulls.Eigenvalues.o              =[to Eigenvalueso];
 
-Eigenvaluesunknown              = Eigenvaluestypes;
-Eigenvaluesunknown(~Nulls.unknown,:)= NaN;
+Eigenvectoro               = [Eigenvaluestypes.eigenvectors.lambda1 Eigenvaluestypes.eigenvectors.lambda2 Eigenvaluestypes.eigenvectors.lambda3];
+Eigenvectoro(~NullsEigen.eigB,:)= NaN;
+Nulls.Eigenvector.o              =[tB Eigenvectoro];
+
+Eigenvaluesunknown              = Eigenvaluestypes.lambda;
+Eigenvaluesunknown(~NullsEigen.unknown,:)= NaN;
 tunknown                          =ttt;
-tunknown(~Nulls.unknown,1)          =NaN;
+tunknown(~NullsEigen.unknown,1)          =NaN;
 Nulls.Eigenvalues.unknown        =[tunknown Eigenvaluesunknown];
+
+Eigenvectorunknown               = [Eigenvaluestypes.eigenvectors.lambda1 Eigenvaluestypes.eigenvectors.lambda2 Eigenvaluestypes.eigenvectors.lambda3];
+Eigenvectorunknown(~NullsEigen.unknown,:)= NaN;
+Nulls.Eigenvector.unknown              =[tB Eigenvectorunknown];
 
 %A
 distanceANull                         = dRmin;
-distanceANull(~Nulls.eigA,2)          = NaN;
+distanceANull(~NullsEigen.eigA,2)          = NaN;
 distanceANull(~sortdr,2)              = NaN;
 
 positionANull                         = Rn;
-positionANull(~Nulls.eigA,:)          = NaN;
+positionANull(~NullsEigen.eigA,:)          = NaN;
 
 %B
 distanceBNull                         = dRmin;
-distanceBNull(~Nulls.eigB,2)          = NaN;
+distanceBNull(~NullsEigen.eigB,2)          = NaN;
 distanceBNull(~sortdr,2)              = NaN;
 
 positionBNull                         = Rn;
-positionBNull(~Nulls.eigB,:)          = NaN;
+positionBNull(~NullsEigen.eigB,:)          = NaN;
 %X
 distanceXNull                         = dRmin;
-distanceXNull(~Nulls.eigx,2)          = NaN;
+distanceXNull(~NullsEigen.eigx,2)          = NaN;
 distanceXNull(~sortdr,2)              = NaN;
 
 positionXNull                         = Rn;
-positionXNull(~Nulls.eigx,:)          = NaN;
+positionXNull(~NullsEigen.eigx,:)          = NaN;
 %Bs
 distanceBsNull                        = dRmin;
-distanceBsNull(~Nulls.eigBs,2)        = NaN;
+distanceBsNull(~NullsEigen.eigBs,2)        = NaN;
 distanceBsNull(~sortdr,2)             = NaN;
 
 positionBsNull                        = Rn;
-positionBsNull(~Nulls.eigBs,:)        = NaN;
+positionBsNull(~NullsEigen.eigBs,:)        = NaN;
 %As
 distanceAsNull                        = dRmin;
-distanceAsNull(~Nulls.eigAs,2)        = NaN;
+distanceAsNull(~NullsEigen.eigAs,2)        = NaN;
 distanceAsNull(~sortdr,2)             = NaN;
 
 positionAsNull                        = Rn;
-positionAsNull(~Nulls.eigAs,:)        = NaN;
+positionAsNull(~NullsEigen.eigAs,:)        = NaN;
 %O
 distanceONull                         = dRmin;
-distanceONull(~Nulls.eigo,2)          = NaN;
+distanceONull(~NullsEigen.eigo,2)          = NaN;
 distanceONull(~sortdr,2)              = NaN;
 
 positionONull                         = Rn;
-positionONull(~Nulls.eigo,:)          = NaN;
+positionONull(~NullsEigen.eigo,:)          = NaN;
 %Unknown type
 distanceUnknownNull                   = dRmin;
-distanceUnknownNull(~Nulls.unknown,2) = NaN;
+distanceUnknownNull(~NullsEigen.unknown,2) = NaN;
 distanceUnknownNull(~sortdr,2)        = NaN;
 
 positionUnknownNull                         = Rn;
-positionUnknownNull(~Nulls.unknown,:)       = NaN;
+positionUnknownNull(~NullsEigen.unknown,:)       = NaN;
 
 Nulls.NullType.distance.A       = distanceANull;
 Nulls.NullType.distance.B       = distanceBNull;
@@ -311,7 +352,7 @@ Nulls.Rnull.Rn3=Rn3;
 Nulls.Rnull.Rn4=Rn4;
 end
 
-function [Nulls,Eigenvalues,constraint,errors]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold)
+function [NullsEigen,Eigenvalues,Current,constraint,errors]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold)
 %C_4_NULL_TYPE - Determines the type of null
 %
 %This function determines what type of null is in each data point which
@@ -350,17 +391,49 @@ err_4C(:,1)=B1(:,1);
 
 % Only interested in the time intervalls when the two errors (eigenerr and
 % curlometer error) is both lower or equal to 40%
-eigvec=zeros(length(gradB(:,1)),3);
+eiglamnda=zeros(length(gradB(:,1)),3);
+eigenvector1=zeros(length(gradB(:,1)),3);
+eigenvector2=zeros(length(gradB(:,1)),3);
+eigenvector3=zeros(length(gradB(:,1)),3);
 eigVal_err=zeros(length(gradB(:,1)),2);
 constraint=false(length(gradB(:,1)),1);
+jParallel=zeros(length(gradB(:,1)),2); 
+jPerpendicular=zeros(length(gradB(:,1)),2);
+%Calculates the parallel and perpendicular current for each null
+   [j,~,~ ,~,~,~] = c_4_j(R1,R2,R3,R4,B1,B2,B3,B4);
+   temp=irf_abs(j);
 for i=1:length(gradB(:,1))
     if all(isnan(gradB(i,2:end)))
         continue
     end
-    deltaB_null     = reshape(gradB(i,2:end),3,3);
-    D               = eig(deltaB_null);
-    eigvec(i,:)     = [D(1,1) D(2,1) D(3,1)];
-    eigVal_err(i,2) = abs(real(D(1,1)+D(2,1)+D(3,1)))/max(abs([real(D(1,1)), real(D(2,1)), real(D(3,1))])) * 100;
+    deltaB_null      = reshape(gradB(i,2:end),3,3);
+    [V,D]            = eig(deltaB_null);
+    eigenvector1(i,:)=[V(1,1) V(2,1) V(3,1)];
+    eigenvector2(i,:)=[V(1,2) V(2,2) V(3,2)];
+    eigenvector3(i,:)=[V(1,3) V(2,3) V(3,3)];
+    eiglamnda(i,:)   = [D(1,1) D(2,2) D(3,3)];
+    eigVal_err(i,2)  = abs(real(D(1,1)+D(2,2)+D(3,3)))/max(abs([real(D(1,1)), real(D(2,2)), real(D(3,3))])) * 100;
+    %Calculates the perpendicular and parallel current of the nulls found
+    temptime=j(i,1);
+   current=temp(i,5);
+   if sign(real(D(1,1))) ~= sign(real(D(2,2))) && sign(real(D(1,1))) ~= sign(real(D(3,3)))
+       tempEigenVector=irf_abs(eigenvector1(i,:));
+       eigenvectors.lambda1=tempEigenVector(1,4);
+       jParallel(i,:)=[temptime dot(current,eigenvectors.lambda1)];
+       jPerpendicular(i,:)=[temptime current-dot(jParallel(i,2),eigenvectors.lambda1)];
+   end
+   if sign(real(D(2,2))) ~= sign(real(D(1,1))) && sign(real(D(2,2))) ~= sign(real(D(3,3)))
+       tempEigenVector=irf_abs(eigenvector2(i,:));
+       eigenvectors.lambda2=tempEigenVector(1,4);
+       jParallel(i,:)=[temptime dot(current,eigenvectors.lambda2)];
+       jPerpendicular(i,:)=[temptime current-dot(jParallel(i,2),eigenvectors.lambda2)];
+   end
+   if sign(real(D(3,3))) ~= sign(real(D(1,1))) && sign(real(D(3,3))) ~= sign(real(D(2,2)))
+       tempEigenVector=irf_abs(eigenvector3(i,:));
+       eigenvectors.lambda3=tempEigenVector(1,4);
+       jParallel(i,:)=[temptime dot(current,eigenvectors.lambda3)];
+       jPerpendicular(i,:)=[temptime current-dot(jParallel(i,2),eigenvectors.lambda3)];
+   end
     if threshold == 100
         constraint(i,1)=true;
     else
@@ -371,15 +444,20 @@ for i=1:length(gradB(:,1))
         end
     end
 end
-eigvec(~constraint,:)= NaN;
+eiglamnda(~constraint,:)= NaN;
+eigenvector1(~constraint,:)= NaN;
+eigenvector2(~constraint,:)= NaN;
+eigenvector3(~constraint,:)= NaN;
+jParallel(~constraint,:)= NaN;
+jPerpendicular(~constraint,:)= NaN;
 eigVal_err(:,1)=B1(:,1);
 eigVal_err(~constraint,:)= NaN;
 err_4C(~constraint,:)= NaN;
 %Determine the null type by using eigenvalues
 %Ideal case
-isAllEigenvaluesReal     = abs(max(imag(eigvec),[],2)) == 0;
-signOfRealpart           = sign(real(eigvec));
-signOfImaginarypart      = sign(imag(eigvec));
+isAllEigenvaluesReal     = abs(max(imag(eiglamnda),[],2)) == 0;
+signOfRealpart           = sign(real(eiglamnda));
+signOfImaginarypart      = sign(imag(eiglamnda));
 nImaginaryNegativeEigenvalues = sum(signOfImaginarypart==-1,2);
 nImaginaryPositiveEigenvalues = sum(signOfImaginarypart==+1,2);
 nRealNegativeEigenvalues = sum(signOfRealpart==-1,2);
@@ -387,7 +465,7 @@ unknowntype              = (nImaginaryNegativeEigenvalues == 3 |sum(signOfImagin
 aType                    = nRealNegativeEigenvalues == 2 ;
 bType                    = nRealNegativeEigenvalues == 1 ;
 unknownrealtype          = (nRealNegativeEigenvalues == 3) | (nRealNegativeEigenvalues == 0);
-minAbsEigenvalue         = min(abs(eigvec),[],2);
+minAbsEigenvalue         = min(abs(eiglamnda),[],2);
 twoDType                 = (minAbsEigenvalue == 0);
 
 eigA                     = ( isAllEigenvaluesReal & aType & ~unknowntype & ~unknownrealtype);
@@ -397,15 +475,19 @@ eigBs                    = (~isAllEigenvaluesReal & bType & ~unknowntype & ~unkn
 eigx                     = ( isAllEigenvaluesReal & twoDType & ~unknowntype);
 eigo                     = (~isAllEigenvaluesReal & twoDType & ~unknowntype);
 unknown                  = (~eigA & ~eigB & ~eigAs & ~eigBs & ~eigx & ~eigo & constraint | unknowntype | unknownrealtype);
-
-Nulls.eigA=eigA;
-Nulls.eigB=eigB;
-Nulls.eigAs=eigAs;
-Nulls.eigBs=eigBs;
-Nulls.eigx=eigx;
-Nulls.eigo=eigo;
-Nulls.unknown=unknown;
-Eigenvalues=eigvec;
+NullsEigen.eigA=eigA;
+NullsEigen.eigB=eigB;
+NullsEigen.eigAs=eigAs;
+NullsEigen.eigBs=eigBs;
+NullsEigen.eigx=eigx;
+NullsEigen.eigo=eigo;
+NullsEigen.unknown=unknown;
+Eigenvalues.lambda=eiglamnda;
+Eigenvalues.eigenvectors.lambda1=eigenvector1;
+Eigenvalues.eigenvectors.lambda2=eigenvector2;
+Eigenvalues.eigenvectors.lambda3=eigenvector3;
 errors.eigval=eigVal_err;
 errors.curlometer=err_4C;
+Current.jPerpendicular=jPerpendicular;
+Current.jParallel=jParallel;
 end
