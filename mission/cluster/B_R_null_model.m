@@ -380,11 +380,13 @@ else
     %Modeldata.PositionError.z(:,length(Modeldata.PositionError.z(1,:))+1:1+length(Modeldata.PositionError.z(1,:)))=PositionError.z(:,3);
 end
 % Saves data in each run incase something happens
-folder=num2str(ii);
-cd(folder)
-save('ModelldataA.mat','Modeldata','-v7.3');
-cd ..
-iii
+name=['ModelldataA',num2str(ii),'.mat'];
+save(name,'Modeldata','-v7.3');
+%folder=num2str(ii);
+%cd(folder)
+%save('ModelldataA.mat','Modeldata','-v7.3');
+%cd ..
+%iii
     end
     %Saves data for each run with different s values.
 if ii==1
