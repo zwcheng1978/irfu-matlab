@@ -8,7 +8,7 @@ function [slope,cc]=irf_walen(v,b,n,vht,tpar,tperp,tint,tint_ex)
 % b - B field [time bx by bz] nT,inside code b is interpolated to v 
 % n - density [time n] cm-3,inside code n is interpolated to v
 % tpar - parallel temperature [time tpar] MK,inside code temp is interpolated to v
-% tpar - perpendicular temperature [time tperp] MK,inside code temp is
+% tperp - perpendicular temperature [time tperp] MK,inside code temp is
 %interpolated to v
 % vht - HT velocity vector [vhtx vhty vhtz] km/s
 % tint - toepoch([yyyy mm dd hh mm ss]) + [0 ss]
