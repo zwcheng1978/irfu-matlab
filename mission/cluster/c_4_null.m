@@ -39,7 +39,6 @@ function Nulls=c_4_null(R1,R2,R3,R4,B1,B2,B3,B4,varargin)
 % Important: Time tags should be included with the vectors and threshold
 % should be given in percentage not deciamalform
 %
-%See Also C_4_NULL_TYPE
 
 %--------written by E.Eriksson--------------------------------------------
 n=size(B1,2);
