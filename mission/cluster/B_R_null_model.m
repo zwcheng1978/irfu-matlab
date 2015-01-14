@@ -115,29 +115,29 @@ for iii=1:250
         theta=rand(size(tt)).*360;
         
         
-        %Disturbance in B-field the chosen satellite
+        %Disturbance in B-field of the chosen satellite
         Bz = amplitude.*cosd(phi);
         By = amplitude.*sind(theta).*sind(phi);
         Bx = amplitude.*cosd(theta).*sind(phi);
         
         
         
-        %Magnetic field measured at the first satellite
+        %Magnetic field in nT measured at the first satellite
         B1x=s.*(onesign).*(x1-xn)+s.*((1/2).*(q-jparall).*(y1-yn));
         B1y=s.*(p).*(y1-yn)+s.*((1/2).*(q+jparall).*(x1-xn));
         B1z=s.*jperp.*(y1-yn)-s.*((p+onesign)).*(z1-zn);
         
-        %Magnetic field measured at the second satellite
+        %Magnetic field in nT measured at the second satellite
         B2x=s.*(onesign).*(x2-xn)+s.*((1/2).*(q-jparall).*(y2-yn));
         B2y=s.*(p).*(y2-yn)+s.*((1/2).*(q+jparall).*(x2-xn));
         B2z=s.*jperp.*(y2-yn)-s.*((p+onesign)).*(z2-zn);
         
-        %Magnetic field measured at the third satellite
+        %Magnetic field in nT measured at the third satellite
         B3x=s.*(onesign).*(x3-xn)+s.*((1/2).*(q-jparall).*(y3-yn));
         B3y=s.*(p).*(y3-yn)+s.*((1/2).*(q+jparall).*(x3-xn));
         B3z=s.*jperp.*(y3-yn)-s.*((p+onesign)).*(z3-zn);
         
-        %Magnetic field measured at the fourth satellite
+        %Magnetic field in nT measured at the fourth satellite
         B4x=s.*(onesign).*(x4-xn)+s.*((1/2).*(q-jparall).*(y4-yn));
         B4y=s.*(p).*(y4-yn)+s.*((1/2).*(q+jparall).*(x4-xn));
         B4z=s.*jperp.*(y4-yn)-s.*((p+onesign)).*(z4-zn);

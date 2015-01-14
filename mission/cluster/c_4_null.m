@@ -7,10 +7,10 @@ function Nulls=c_4_null(R1,R2,R3,R4,B1,B2,B3,B4,varargin)
 %expansion of the lowest order of B about the null.
 %
 %   [nullPosition,C4limits,dRmin,NullType,Requirement]=C_4_NULL_POSITION(R1,R2,R3,R4,B1,B2,B3,B4);
-%   [nullPosition,C4limits,dRmin,NullType,Requirement]=C_4_NULL_POSITION(R1,R2,R3,R4,B1,B2,B3,B4, threshold_value,scseparation_value);
-%   -threshold=100 means no restriction. Default value for the satellite
-%   separation is 1000km. The value needs to be given in km. If a threshold
-%   or sc separation value is given you need to also give the other value
+%   [nullPosition,C4limits,dRmin,NullType,Requirement]=C_4_NULL_POSITION(R1,R2,R3,R4,B1,B2,B3,B4, threshold,length_value);
+%   -threshold=100 means no restriction. Default value for the length
+%   is 1000km. The value needs to be given in km. The length_value gives the maximum length of box created to look for the nulls.
+%   If a thresholdvor length value is given you need to also give the other value
 %   for the program to work.
 %   OUTPUT
 %   nullPosition = [Time xn yn zn]
@@ -58,10 +58,10 @@ if length(varargin)==1
 end
 if isempty(varargin) == true
     threshold = 40;
-    scseparation=1000; %Ion intertial length
+    length_value=1000; %Ion intertial length
 else
     threshold = varargin{1};
-    scseparation=varargin{2};
+    length_value=varargin{2};
 end
 
 %First the magn. field and location of the s/c's need to be
@@ -144,12 +144,14 @@ maxZ = max(([R1(:,4) R2(:,4) R3(:,4) R4(:,4)]),[],2);
 
 %For each eigenvalue corresponding to the tolerance level (the two errors less or equal to 40%) break out their corresponding time and dR value
 %(the minimum distance from all s/c to the null)
-disp('Sorting based on the null located within the s/c tetrahedron thus having a maximum length of one ion inertial length');
-sortNull=dRmin(:,2) <= scseparation;
+disp('Sorting based on the null located within the s/c box made up of the maximum and minimum values for each direction of all satellites');
+sortsizedX=(maxX-minX) <= length_values;
+sortsizedY=(maxY-minY) <= length_values;
+sortsizedZ=(maxZ-minZ) <= length_values;
 sortNullDx=Rn1(:,2) >= minX & Rn1(:,2) <= maxX;
 sortNullDy=Rn1(:,3) >= minY & Rn1(:,3) <= maxY;
 sortNullDz=Rn1(:,4) >= minZ & Rn1(:,4) <= maxZ;
-sortdr= sortNull & sortNullDx & sortNullDy & sortNullDz;
+sortdr= sortsizedX & sortsizedY & sortsizedZ & sortNullDx & sortNullDy & sortNullDz;
 
 %Poincare index
 index(~sortdr,:)=NaN;
@@ -200,6 +202,7 @@ Nulls.nullPosition      = [Time Rn];
 
 Rn1(~constraint,:) = NaN;
 Rn1(~sortdr,:)     = NaN;
+
 Rn2(~constraint,:) = NaN;
 Rn2(~sortdr,:)     = NaN;
 
