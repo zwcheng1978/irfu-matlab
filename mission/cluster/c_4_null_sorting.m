@@ -19,6 +19,12 @@ function [timeIntervalWithinInterval, timeIntervalsOfInterest]=c_4_null_sorting(
 %
 %See Also C_4_NULL
 
+%--------written by E.Eriksson--------------------------------------------
+
+if nargin == 0
+    help c_4_null_sorting;
+    return;
+end
 if nargin < 7
     error('Too few input values. See usage: help c_4_null_sorting')
 end
@@ -125,6 +131,7 @@ disp('Starting calculation based on the magnetic field and position of the null'
 nullPositionFulfilled = false(length(timeIntervalsOfInterest(:,1)),1);
 timeIntervalWithinInterval = zeros(length(timeIntervalsOfInterest(:,1)),2);
 datagap=zeros(1,2);
+count=0;
 for iTimeInterval2=1:length(timeIntervalsOfInterest(:,1))
 tint=timeIntervalsOfInterest(iTimeInterval2,:); %Goes through each tint every loop
 timestepstr=num2str(iTimeInterval2);
@@ -133,6 +140,7 @@ if all(isnan(tint)) %If the tint has been NaN (the separation between the
     %satellites wasn't fulfilled) continue to next tint
     continue
 end
+count=count+1;
 
 B1=local.c_read('B_vec_xyz_gse__C1_CP_FGM_FULL',tint);
 B1 = irf_gse2gsm(B1); %Gives the magnetic field of Cluster 1 in GSM
@@ -243,7 +251,6 @@ if all(~sortdr)   %If none of the sort is fullfilled then just continue
     continue;
 end
 
-%B
 disp('Nulls found within the s/c tetrahedron for time interval')
 timestep=median(diff(B1(:,1)));
 B1(~sortdr,2:4)=NaN;
@@ -256,14 +263,15 @@ if indStart==indEnd
 end
 disp('Saving time interval')
 timeIntervalWithinInterval(iTimeInterval2,:)=[indStart-timestep/2 indEnd+timestep/2];
+
 % Checks if how much of the time interval that didn't fulfill the
-% requirement. If it is less than 1/3 of the time interval then the distance to the null is
-% assumed to be acceptable
+% requirement. If it is less than 1/3 of the time interval then the entire
+% interval is assumed to be acceptable
 if sum(isnan(B1(:,2))) <= ((1/3)*length(B1(:,1)))
 nullPositionFulfilled(iTimeInterval2,1)=true;
 end
 end
-
+disp([count,' intervals were found to contain nulls']);
 timeIntervalsOfInterest(~nullPositionFulfilled,:)          = NaN;
 timeIntervalWithinInterval(timeIntervalWithinInterval==0)  = NaN;
 save([name,'.mat'],'timeIntervalsOfInterest','timeIntervalWithinInterval');

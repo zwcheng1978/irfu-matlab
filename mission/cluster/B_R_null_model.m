@@ -1,82 +1,98 @@
-function [Modeldata]=B_R_null_model(q,p,jperp,jparall,onesign,s,name)
+function [Modeldata]=B_R_null_model(a,stat_loops,steps,q,p,jperp,jparall,onesign,s,name)
 %B_R_NULL_MODEL - Creates a simple model of linear B-field and position (R)
 %taken from real data and calculates the number of different nulltypes
 %found when a disturbance is added to a chosen satellite.
+
 %p,q,s,jperp,parall and onesign are parameters from real data ...
 %that has been rotated into the nulls coordinate system. See
 %ROTATION_OF_GRADBDATA_TO_MODEL_PARAMETERS for more details
-
+%INPUT
 % jperp is the current perpendicular to the spine of the null and jparall is the
 % current parallel to the spine of the null. s is the scaling parameter
 % that is used to make the parameters unitless. onesign is the sign of the
 % gradB(1,1) value. name is the name (in string) that you want to save the
 % file as.
+%OUTPUT
+%Modeldata is a structure that contains
 
-%Calculates the s/c's position
-% % S/C 1-4 space coordinates using an estimated spacing between satellites
-% from Cluster in Oct 1 2001
-%Keeping the s/c's stuck and moving the null instead for simplicity sake
+%--------written by E.Eriksson--------------------------------------------
+
 if nargin == 0
-    help B_R_model;
+    help B_R_null_model;
     return;
-elseif nargin < 7
+elseif nargin < 10
     error('Too few input values. See usage: help B_R_null_model')
-elseif nargin > 7
+elseif nargin > 10
     error('Too many input values. See usage: help B_R_null_model')
 end
 
 %Creates time axis
-t=(0.04:0.04:20)';
-t1=1001929700.10000-0.0400;
-tt=zeros(length(t),1);
-x1=zeros(length(t),1);
-x2=zeros(length(t),1);
-x3=zeros(length(t),1);
-x4=zeros(length(t),1);
-y1=zeros(length(t),1);
-y2=zeros(length(t),1);
-y3=zeros(length(t),1);
-y4=zeros(length(t),1);
-z1=zeros(length(t),1);
-z2=zeros(length(t),1);
-z3=zeros(length(t),1);
-z4=zeros(length(t),1);
+t=(0.04:0.04:40)';
+tt=1001929700.10000+t-0.04;
+R1=zeros(length(t),4);
+R2=zeros(length(t),4);
+R3=zeros(length(t),4);
+R4=zeros(length(t),4);
+
+
+%Building tetrahedron 
+
+h=(a*sqrt(6))/3;
+L=(a*sqrt(3))/2;
+
+R1t=[0,0,h]; %Along Z axis (The spine and Jparall current)
+R2t=[(1/3)*L,-(a/2),0];
+R3t=[(1/3)*L,+(a/2),0];
+R4t=[(-(2/3)*L),0,0]; %Along X-axis (the resultant current)
+
+R1(:,1)=tt;
+R1(:,2)=R1t(1,1);
+R1(:,3)=R1t(1,2);
+R1(:,4)=R1t(1,3);
+
+R2(:,1)=tt;
+R2(:,2)=R2t(1,1);
+R2(:,3)=R2t(1,2);
+R2(:,4)=R2t(1,3);
+
+R3(:,1)=tt;
+R3(:,2)=R3t(1,1);
+R3(:,3)=R3t(1,2);
+R3(:,4)=R3t(1,3);
+
+R4(:,1)=tt;
+R4(:,2)=R4t(1,1);
+R4(:,3)=R4t(1,2);
+R4(:,4)=R4t(1,3);
+
 %For each time gives the satellite position which is fixed in time
-for i=1:length(t)
-    t2=t1+0.04;
-    x1(i,1)=-106493;
-    x2(i,1)=-106558.601562500;
-    x3(i,1)=-106674.898437500;
-    x4(i,1)=-106561.571555391;
-    y1(i,1)=-58033.9495605081;
-    y2(i,1)=-57835.8976059652;
-    y3(i,1)=-57916.6523337731;
-    y4(i,1)=-58032.3476151215;
-    z1(i,1)=2951.23366036776;
-    z2(i,1)=2855.83738888417;
-    z3(i,1)=2929.01943807376;
-    z4(i,1)=2762.29629071977;
-    tt(i,1)=t1+0.0400;
-    t1=t2;
-end
+%x1(:,1)=-106493;
+%x2(:,1)=-106558.601562500;
+%x3(:,1)=-106674.898437500;
+%x4(:,1)=-106561.571555391;
+%y1(:,1)=-58033.9495605081;
+%y2(:,1)=-57835.8976059652;
+%y3(:,1)=-57916.6523337731;
+%y4(:,1)=-58032.3476151215;
+%z1(:,1)=2951.23366036776;
+%z2(:,1)=2855.83738888417;
+%z3(:,1)=2929.01943807376;
+%z4(:,1)=2762.29629071977;
+    
 % S/C 1-4 space coordinates using an estimated spacing between satellites
 % from Cluster in Oct 1 2001
-R1=[tt x1 y1 z1];
-R2=[tt x2 y2 z2];
-R3=[tt x3 y3 z3];
-R4=[tt x4 y4 z4];
 
 %Calculates the Bfield measured by S/C's for each cordinate the magnetic
 %null is in position (xn,yn,zn)
 
 %% Assumption of a,b,c,alpha and beta (--+ A, ++- B) A +1 B -1
 %Moving null
-x0=-106700;
-y0=-58100;
-z0=2700;
-xn=x0+20.*t;
-yn=y0+20.*t;
-zn=z0+20.*t;
+x0=R2(1,2)+15;
+y0=R2(1,3)-10;
+z0=R1(1,4)+10;
+xn=x0-7.*t;
+yn=y0+8.*t;
+zn=z0-6.*t;
 Rn=[tt xn yn zn];
 
    jthresh=sqrt(((s*p)-(s*onesign)).^2+(s*q).^2);
@@ -103,13 +119,13 @@ else
 end
 
 %iii for loop runs to checks the distribution of the random function
-for iii=1:250
+for iii=1:steps
     %Starting value for the amplitude of the disturbance
     amplitude=0;
     %i for loop loops over each amplitude increase so what i and iii does
     %toghether is calculate for each amplitude the distribution of the
     %random function since it will be changed for each iii run.
-    for i=1:1000
+    for i=1:stat_loops
         %The spherical coordinate angles
         phi=rand(size(tt)).*180;
         theta=rand(size(tt)).*360;
@@ -123,24 +139,24 @@ for iii=1:250
         
         
         %Magnetic field in nT measured at the first satellite
-        B1x=s.*(onesign).*(x1-xn)+s.*((1/2).*(q-jparall).*(y1-yn));
-        B1y=s.*(p).*(y1-yn)+s.*((1/2).*(q+jparall).*(x1-xn));
-        B1z=s.*jperp.*(y1-yn)-s.*((p+onesign)).*(z1-zn);
+        B1x=s.*(onesign).*(R1(:,2)-xn)+s.*((1/2).*(q-jparall).*(R1(:,3)-yn));
+        B1y=s.*(p).*(R1(:,3)-yn)+s.*((1/2).*(q+jparall).*(R1(:,2)-xn));
+        B1z=s.*jperp.*(R1(:,3)-yn)-s.*((p+onesign)).*(R1(:,4)-zn);
         
         %Magnetic field in nT measured at the second satellite
-        B2x=s.*(onesign).*(x2-xn)+s.*((1/2).*(q-jparall).*(y2-yn));
-        B2y=s.*(p).*(y2-yn)+s.*((1/2).*(q+jparall).*(x2-xn));
-        B2z=s.*jperp.*(y2-yn)-s.*((p+onesign)).*(z2-zn);
+        B2x=s.*(onesign).*(R2(:,2)-xn)+s.*((1/2).*(q-jparall).*(R2(:,3)-yn));
+        B2y=s.*(p).*(R2(:,3)-yn)+s.*((1/2).*(q+jparall).*(R2(:,2)-xn));
+        B2z=s.*jperp.*(R2(:,3)-yn)-s.*((p+onesign)).*(R2(:,4)-zn);
         
         %Magnetic field in nT measured at the third satellite
-        B3x=s.*(onesign).*(x3-xn)+s.*((1/2).*(q-jparall).*(y3-yn));
-        B3y=s.*(p).*(y3-yn)+s.*((1/2).*(q+jparall).*(x3-xn));
-        B3z=s.*jperp.*(y3-yn)-s.*((p+onesign)).*(z3-zn);
+        B3x=s.*(onesign).*(R3(:,2)-xn)+s.*((1/2).*(q-jparall).*(R3(:,3)-yn));
+        B3y=s.*(p).*(R3(:,3)-yn)+s.*((1/2).*(q+jparall).*(R3(:,2)-xn));
+        B3z=s.*jperp.*(R3(:,3)-yn)-s.*((p+onesign)).*(R3(:,4)-zn);
         
         %Magnetic field in nT measured at the fourth satellite
-        B4x=s.*(onesign).*(x4-xn)+s.*((1/2).*(q-jparall).*(y4-yn));
-        B4y=s.*(p).*(y4-yn)+s.*((1/2).*(q+jparall).*(x4-xn));
-        B4z=s.*jperp.*(y4-yn)-s.*((p+onesign)).*(z4-zn);
+        B4x=s.*(onesign).*(R4(:,2)-xn)+s.*((1/2).*(q-jparall).*(R4(:,3)-yn));
+        B4y=s.*(p).*(R4(:,3)-yn)+s.*((1/2).*(q+jparall).*(R4(:,2)-xn));
+        B4z=s.*jperp.*(R4(:,3)-yn)-s.*((p+onesign)).*(R4(:,4)-zn);
         
         if strcmp(Sattest,'1')
             B1x=B1x+Bx;
@@ -195,20 +211,7 @@ for iii=1:250
         
         %Calculates the nullPosition and the NullType
         Nulls=c_4_null(R1,R2,R3,R4,B1,B2,B3,B4);
-        
-        %Here starts the saving function
-        nullPositionlogical = false(length(Nulls.nullPosition(:,1)),1);
-        for TimeInterval2=1:length(Nulls.nullPosition(:,1))
-            if all(isnan(Nulls.nullPosition(TimeInterval2,2:4))) %If the nullPosition has been NaN continue to the next nullPosition
-                continue
-            end
-            nullPositionlogical(TimeInterval2,1)=true;
-        end
-        disp('calculates number of type etc.');
-        nullposition=Nulls.nullPosition(nullPositionlogical,:);
-        %saves only the Rn where we've located a null.
-        %Rn(~nullPositionlogical,:)=NaN;
-        
+
         %sigmaerror=amplitude.*ones(length(Nulls.nullPosition(:,2)),1);
         %xerror=[sigmaerror tt Rn(:,2)-Nulls.nullPosition(:,2)];
         %yerror=[sigmaerror tt Rn(:,3)-Nulls.nullPosition(:,3)];
@@ -221,36 +224,23 @@ for iii=1:250
         %Bfield3=[time amplitudesave B3(:,2:4)];
         %Bfield4=[time amplitudesave B4(:,2:4)];
         
-        %Saves the number of each type found for each amplitude 500 is the size
+        %Saves the number of each type found for each amplitude length(t) is the size
         %of the Bfields so I remove all NaN values where a certain type hasn't
         %been found.
-        A=[amplitude 500-sum(isnan(Nulls.NullType.position.A(:,2)))];
-        B=[amplitude 500-sum(isnan(Nulls.NullType.position.B(:,2)))];
-        As=[amplitude 500-sum(isnan(Nulls.NullType.position.As(:,2)))];
-        Bs=[amplitude 500-sum(isnan(Nulls.NullType.position.Bs(:,2)))];
-        unknown=[amplitude 500-sum(isnan(Nulls.NullType.position.unknown(:,2)))];
-        x=[amplitude 500-sum(isnan(Nulls.NullType.position.x(:,2)))];
-        o=[amplitude 500-sum(isnan(Nulls.NullType.position.o(:,2)))];
+        A=[amplitude length(t)-sum(Nulls.Is.A(:,1))];
+        B=[amplitude length(t)-sum(Nulls.Is.B(:,1))];
+        As=[amplitude length(t)-sum(Nulls.Is.As(:,1))];
+        Bs=[amplitude length(t)-sum(Nulls.Is.Bs(:,1))];
+        unknown=[amplitude length(t)-sum(Nulls.Is.unknown(:,1))];
+        x=[amplitude length(t)-sum(Nulls.Is.x(:,1))];
+        o=[amplitude length(t)-sum(Nulls.Is.o(:,1))];
         numberofnullserror=[amplitude A(1,2)+B(1,2)+Bs(1,2)+As(1,2)];
         
-        scalingamp=amplitude.*ones(length(nullposition(:,2)),1);
-        GradB.Atype=[scalingamp Nulls.NullType.gradB.A(nullPositionlogical,2:end)];
-        GradB.Astype=[scalingamp Nulls.NullType.gradB.As(nullPositionlogical,2:end)];
-        GradB.Btype=[scalingamp Nulls.NullType.gradB.B(nullPositionlogical,2:end)];
-        GradB.Bstype=[scalingamp Nulls.NullType.gradB.Bs(nullPositionlogical,2:end)];
-        GradB.xtype=[scalingamp Nulls.NullType.gradB.x(nullPositionlogical,2:end)];
-        GradB.otype=[scalingamp Nulls.NullType.gradB.o(nullPositionlogical,2:end)];
-        GradB.unknowntype=[scalingamp Nulls.NullType.gradB.unknown(nullPositionlogical,2:end)];
         %Increases the amplitude with each i step so that in the end you will
         %have an amplitude which is about 75% of mBx. This is so the amplitude
         %is big enought for each increase of decrease when changing s in iii.
-        amplitude=amplitude+((mBx(1,1)*0.75)/250);
-        %Not causing disturbances at the other satellites but it's possible to
-        %implement.
-        %uncertaincyamplitude1=uncertaincyamplitude1+0.005;
-        %uncertaincyamplitude2=uncertaincyamplitude1+0.005;
-        %uncertaincyamplitude4=uncertaincyamplitude1+0.005;
-        
+        amplitude=amplitude+(1.5/steps);
+       
         %Just saving function to save data for each run
         if i==1
             KvotAmplitudeandBfieldDiff.Bx=KvotBetweenamplitudeandBxieldDifference;
@@ -258,13 +248,7 @@ for iii=1:250
             KvotAmplitudeandBfieldDiff.Bz=KvotBetweenamplitudeandBzieldDifference;
             KvotAmplitudeandBfieldDiff.Btot=KvotBetweenamplitudeandBtotDifference;
             
-            gradB.Atype=GradB.Atype;
-            gradB.Btype=GradB.Btype;
-            gradB.Astype=GradB.Astype;
-            gradB.Bstype=GradB.Bstype;
-            gradB.xtype=GradB.xtype;
-            gradB.otype=GradB.otype;
-            gradB.unknowntype=GradB.unknowntype;
+            
             %Bfield.B1=Bfield1;
             %Bfield.B2=Bfield2;
             %Bfield.B3=Bfield3;
@@ -296,13 +280,6 @@ for iii=1:250
             %Bfield.B2(length(Bfield.B2(:,1))+1:length(Bfield2(:,1))+length(Bfield.B2(:,1)),:)=Bfield2;
             %Bfield.B3(length(Bfield.B3(:,1))+1:length(Bfield3(:,1))+length(Bfield.B3(:,1)),:)=Bfield3;
             %Bfield.B4(length(Bfield.B4(:,1))+1:length(Bfield4(:,1))+length(Bfield.B4(:,1)),:)=Bfield4;
-           gradB.Atype(length(gradB.Atype(:,1))+1:length(GradB.Atype(:,1))+length(gradB.Atype(:,1)),:)=GradB.Atype;
-        gradB.Btype(length(gradB.Btype(:,1))+1:length(GradB.Btype(:,1))+length(gradB.Btype(:,1)),:)=GradB.Btype;
-        gradB.Astype(length( gradB.Astype(:,1))+1:length(GradB.Astype(:,1))+length(gradB.Astype(:,1)),:)=GradB.Astype;
-        gradB.Bstype(length( gradB.Bstype(:,1))+1:length(GradB.Bstype(:,1))+length( gradB.Bstype(:,1)),:)=GradB.Bstype;
-       gradB.xtype(length( gradB.xtype(:,1))+1:length(GradB.xtype(:,1))+length( gradB.xtype(:,1)),:)=GradB.xtype;
-        gradB.otype(length( gradB.otype(:,1))+1:length(GradB.otype(:,1))+length( gradB.otype(:,1)),:)=GradB.otype;
-        gradB.unknowntype(length( gradB.unknowntype(:,1))+1:length(GradB.unknowntype(:,1))+length( gradB.unknowntype(:,1)),:)=GradB.unknowntype;
             
             NumberofType.A(length(NumberofType.A(:,1))+1:length(A(:,1))+length(NumberofType.A(:,1)),:)=A;
             NumberofType.As(length(NumberofType.As(:,1))+1:length(As(:,1))+length(NumberofType.As(:,1)),:)=As;
@@ -326,14 +303,6 @@ for iii=1:250
         Modeldata.KvotAmplitudeandBfieldDiff.By=KvotAmplitudeandBfieldDiff.By;
         Modeldata.KvotAmplitudeandBfieldDiff.Bz=KvotAmplitudeandBfieldDiff.Bz;
         Modeldata.KvotAmplitudeandBfieldDiff.Btot=KvotAmplitudeandBfieldDiff.Btot;
-        
-         Modeldata.GradB.A=gradB.Atype;
-         Modeldata.GradB.B=gradB.Btype;
-        Modeldata.GradB.As=gradB.Astype;
-        Modeldata.GradB.Bs=gradB.Bstype;
-            Modeldata.GradB.x=gradB.xtype;
-            Modeldata.GradB.o=gradB.otype;
-           Modeldata.GradB.unknown=gradB.unknowntype;
         
         %Modeldata.Bfield.B1.Bx=[Bfield.B1(:,1) Bfield.B1(:,2) Bfield.B1(:,3)];
         %Modeldata.Bfield.B1.By=[Bfield.B1(:,1) Bfield.B1(:,2) Bfield.B1(:,4)];

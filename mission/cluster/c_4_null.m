@@ -1,41 +1,66 @@
 function Nulls=c_4_null(R1,R2,R3,R4,B1,B2,B3,B4,varargin)
-%C_4_NULL - Calculates the null position within the tetrahedron using 4 spacecraft technique
+%C_4_NULL - Calculates different null values within a s/c box using 4 spacecraft technique
 %
-%This function calculates the null position within the tetrahedron made up 
-%of the satellites by assuming that the B-field in the vicinity of the 
-%null can be determined by considering a Taylor
-%expansion of the lowest order of B about the null.
+%   This function calculates the null position within the tetrahedron made up 
+%   of the satellites by assuming that the B-field in the vicinity of the 
+%   null can be determined by considering a Taylor
+%   expansion of the lowest order of B about the null.
 %
-%   [nullPosition,C4limits,dRmin,NullType,Requirement]=C_4_NULL_POSITION(R1,R2,R3,R4,B1,B2,B3,B4);
-%   [nullPosition,C4limits,dRmin,NullType,Requirement]=C_4_NULL_POSITION(R1,R2,R3,R4,B1,B2,B3,B4, threshold,length_value);
-%   -threshold=100 means no restriction. Default value for the length
-%   is 1000km. The value needs to be given in km. The length_value gives the maximum length of box created to look for the nulls.
-%   If a thresholdvor length value is given you need to also give the other value
-%   for the program to work.
-%   OUTPUT
-%   nullPosition = [Time xn yn zn]
-%   Requirement is a structure containing the two restrictions used on the
-%   data. BfieldandEigenvalueslessthanchosenpercentage is if the
-%   eigenvalues and Bfield values for the datapoints are below the chosen
-%   percentage value (default=40%). DistancewithinSCconfiguration is the
-%   logical vector showing true (1) if the null point is within the SC
-%   configuration.
-%   dRmin = [Time dRmin] Gives the minimum distance to the null point
-%   looking from all satellites
-%   C4limits is a structure containing the maxmimum and minimum positions
-%   of all satellites at each time tag.
-%   NullType is a structure containing two structures where each nulltype identified at each
-%   time tag is given in the minimum distance from the satellites to the nullpoint and in the exact position (x,y,z).
-%   Eigenvalues is a structure consisting of the lambda values and another
-%   structure with the eigenvalues of the different lamda values. Lambda 1
-%   of the lambda values coincide with the 3 first values on the first row.
-%   Lambda 2 of the lambda values coincide with the 3 middle values on the first row.
-% INPUT
+%   Nulls=C_4_NULL(R1,R2,R3,R4,B1,B2,B3,B4);
+%   Nulls=C_4_NULL(R1,R2,R3,R4,B1,B2,B3,B4, threshold,length_value);
+
+%   INPUT
 %   B? = the B-field measured at satellite ?: column 1 - time
 %   column 2-4 B-field in x,y,z direction
 %   R? = the satellite ? position in GSM coordinate system: column 1 - time
 %   column 2-4 satellite position in x,y,z direction
+%   -threshold=100 means no restriction. Default value for the length
+%   is 1000km. The value needs to be given in km. The length_value gives the maximum length of box created to look for the nulls.
+%   If a thresholdvor length value is given you need to also give the other value
+%   for the program to work.
 %
+%   OUTPUT
+%   Nulls is a structure containing several different values.
+
+%   Nulls.nullPosition = [Time xn yn zn] - gives the position of the null
+%   in each direction.
+%
+%   Nulls.Requirement is a structure containing the logical vector of the two restrictions used on the
+%   data and then later used to NaN time tags in all preceding structures where both restrictions aren't fullfilled. 
+%   BfieldandEigenvalueslessthanchosenpercentage is if the
+%   eigenvalues and Bfield values for the datapoints are below the chosen
+%   percentage value (default=40%). DistancewithinSCconfiguration is the
+%   logical vector showing true (1) if the null point is within the SC
+%   box defined bu the satellites and the length_value.
+%
+%   Nulls.current contains the parallel and perpendicular current to the
+%   spine of each null for every time tag.
+%
+%   Nulls.pindex contains the Poincaré index for each time tag.
+%
+%   Nulls.errors contains the values for each error constraint: eigval and
+%   curlometer for each time tag.
+%
+%   Nulls.GradB is gradB for each time tag where the error contraint
+%   limits aren't fullfilled contains NaN in the format given by c_4_grad function.
+%
+%   Nulls.Eigenvalues contains the eigenvalues for each time tag.
+%
+%   Nulls.Eigenvectors contains the eigenvectors for each null sorted after
+%   their eigenvalues.
+%
+%   Nulls.Rnull contains the position of the null for each time tag from each
+%   satellite where Rn? gives the position from satellite ?.
+%    
+%   Nulls.Distance = [Time dRmin] Gives the minimum distance to the null point
+%   looking from all satellites
+%
+%   Nulls.C4limits is a structure containing the maxmimum and minimum positions
+%   of all satellites at each time tag for each direction (x,y,z).
+%
+%   Nulls.Is.? contains the logical index for each type (?) of null. 1(true)
+%   is when a null of that type has been found at that time tag.
+%  
 % Important: Time tags should be included with the vectors and threshold
 % should be given in percentage not deciamalform
 %
@@ -46,15 +71,15 @@ if n < 4
     error('Time tag must be included in each input vector. Please do so and try again.')
 end
 if nargin == 0
-    help c_4_null_position;
+    help c_4_null;
     return;
 elseif nargin < 8
-    error('Too few input values. See usage: help c_4_null_position')
+    error('Too few input values. See usage: help c_4_null')
 elseif nargin > 10
-    error('Too many input values. See usage: help c_4_null_position')
+    error('Too many input values. See usage: help c_4_null')
 end
 if length(varargin)==1
-    error('Too few input values. See usage: help c_4_null_position')
+    error('You need to give both threshold value and length value. See usage: help c_4_null')
 end
 if isempty(varargin) == true
     threshold = 40;
@@ -145,9 +170,9 @@ maxZ = max(([R1(:,4) R2(:,4) R3(:,4) R4(:,4)]),[],2);
 %For each eigenvalue corresponding to the tolerance level (the two errors less or equal to 40%) break out their corresponding time and dR value
 %(the minimum distance from all s/c to the null)
 disp('Sorting based on the null located within the s/c box made up of the maximum and minimum values for each direction of all satellites');
-sortsizedX=(maxX-minX) <= length_values;
-sortsizedY=(maxY-minY) <= length_values;
-sortsizedZ=(maxZ-minZ) <= length_values;
+sortsizedX=(maxX-minX) <= length_value;
+sortsizedY=(maxY-minY) <= length_value;
+sortsizedZ=(maxZ-minZ) <= length_value;
 sortNullDx=Rn1(:,2) >= minX & Rn1(:,2) <= maxX;
 sortNullDy=Rn1(:,3) >= minY & Rn1(:,3) <= maxY;
 sortNullDz=Rn1(:,4) >= minZ & Rn1(:,4) <= maxZ;
@@ -160,15 +185,27 @@ Nulls.pindex=index;
 Nulls.errors=errors;
 
 Current.jParallel(~sortdr,:)=NaN;
-Current.jParallelabs(~sortdr,:)=NaN;
 Nulls.current.jParallel=Current.jParallel;
-Nulls.current.jParallelabs=Current.jParallelabs;
 
 Current.jPerpendicular(~sortdr,:)=NaN;
-Current.jPerpendicularabs(~sortdr,:)=NaN;
 Nulls.current.jPerpendicular=Current.jPerpendicular;
-Nulls.current.jPerpendicularabs=Current.jPerpendicularabs;
 
+%Nulltype
+NullsEigen.eigA(~sortdr,:)=false;
+NullsEigen.eigAs(~sortdr,:)=false;
+NullsEigen.eigB(~sortdr,:)=false;
+NullsEigen.eigBs(~sortdr,:)=false;
+NullsEigen.eigx(~sortdr,:)=false;
+NullsEigen.eigo(~sortdr,:)=false;
+NullsEigen.unknown(~sortdr,:)=false;
+
+Nulls.Is.A=NullsEigen.eigA;
+Nulls.Is.As=NullsEigen.eigAs;
+Nulls.Is.B=NullsEigen.eigB;
+Nulls.Is.Bs=NullsEigen.eigBs;
+Nulls.Is.o=NullsEigen.eigo;
+Nulls.Is.x=NullsEigen.eigx;
+Nulls.Is.unknown=NullsEigen.unknown;
 % min and max for all s/c's
 minX(~constraint,:) = NaN;
 maxX(~constraint,:) = NaN;
@@ -180,7 +217,7 @@ maxZ(~constraint,:) = NaN;
 %gradB matrix
 gradB(~constraint,:) = NaN;
 gradB(~sortdr,:)     = NaN;
-
+Nulls.GradB=gradB;
 %Current
 jsave(~constraint,:) = NaN;
 jsave(~sortdr,:)     = NaN;
@@ -220,217 +257,13 @@ Eigenvaluestypes.lambda(~sortdr,:)     = NaN;
 Eigenvaluestypes.eigenvectors.lambda1(~sortdr,:)     = NaN;
 Eigenvaluestypes.eigenvectors.lambda2(~sortdr,:)     = NaN;
 Eigenvaluestypes.eigenvectors.lambda3(~sortdr,:)     = NaN;
-ttt                        =Time;
-ttt(~constraint,:)         = NaN;
-ttt(~sortdr,:)             = NaN;
 
+Nulls.Eigenvalues=Eigenvaluestypes.lambda;
+Nulls.Eigenvectors.lambda1=Eigenvaluestypes.eigenvectors.lambda1;
+Nulls.Eigenvectors.lambda2=Eigenvaluestypes.eigenvectors.lambda2;
+Nulls.Eigenvectors.lambda3=Eigenvaluestypes.eigenvectors.lambda3;
 
-EigenvaluesA                     = Eigenvaluestypes.lambda;
-EigenvaluesA(~NullsEigen.eigA,:) = NaN;
-tA                               =ttt;
-tA(~NullsEigen.eigA,1)           =NaN;
-Nulls.Eigenvalues.A              =[tA EigenvaluesA];
-Eigenvectorlambda1A               = Eigenvaluestypes.eigenvectors.lambda1;
-Eigenvectorlambda1A(~NullsEigen.eigA,:)= NaN;
-Eigenvectorlambda2A               = Eigenvaluestypes.eigenvectors.lambda2;
-Eigenvectorlambda2A(~NullsEigen.eigA,:)= NaN;
-Eigenvectorlambda3A               = Eigenvaluestypes.eigenvectors.lambda3;
-Eigenvectorlambda3A(~NullsEigen.eigA,:)= NaN;
-Nulls.Eigenvector.A.lambda1              =[tA Eigenvectorlambda1A];
-Nulls.Eigenvector.A.lambda2              =[tA Eigenvectorlambda2A];
-Nulls.Eigenvector.A.lambda3              =[tA Eigenvectorlambda3A];
-
-EigenvaluesAs               = Eigenvaluestypes.lambda;
-EigenvaluesAs(~NullsEigen.eigAs,:)= NaN;
-tAs                         =ttt;
-tAs(~NullsEigen.eigAs,1)          =NaN;
-Nulls.Eigenvalues.As             =[tAs EigenvaluesAs];
-
-Eigenvectorlambda1As               = Eigenvaluestypes.eigenvectors.lambda1;
-Eigenvectorlambda1As(~NullsEigen.eigAs,:)= NaN;
-Eigenvectorlambda2As               = Eigenvaluestypes.eigenvectors.lambda2;
-Eigenvectorlambda2As(~NullsEigen.eigAs,:)= NaN;
-Eigenvectorlambda3As               = Eigenvaluestypes.eigenvectors.lambda3;
-Eigenvectorlambda3As(~NullsEigen.eigAs,:)= NaN;
-Nulls.Eigenvector.As.lambda1              =[tAs Eigenvectorlambda1As];
-Nulls.Eigenvector.As.lambda2              =[tAs Eigenvectorlambda2As];
-Nulls.Eigenvector.As.lambda3              =[tAs Eigenvectorlambda3As];
-
-EigenvaluesB               = Eigenvaluestypes.lambda;
-EigenvaluesB(~NullsEigen.eigB,:)= NaN;
-tB                         =ttt;
-tB(~NullsEigen.eigB,1)          =NaN;
-Nulls.Eigenvalues.B              =[tB EigenvaluesB];
-
-Eigenvectorlambda1B               = Eigenvaluestypes.eigenvectors.lambda1;
-Eigenvectorlambda1B(~NullsEigen.eigB,:)= NaN;
-Eigenvectorlambda2B               = Eigenvaluestypes.eigenvectors.lambda2;
-Eigenvectorlambda2B(~NullsEigen.eigB,:)= NaN;
-Eigenvectorlambda3B               = Eigenvaluestypes.eigenvectors.lambda3;
-Eigenvectorlambda3B(~NullsEigen.eigB,:)= NaN;
-Nulls.Eigenvector.B.lambda1              =[tB Eigenvectorlambda1B];
-Nulls.Eigenvector.B.lambda2              =[tB Eigenvectorlambda2B];
-Nulls.Eigenvector.B.lambda3              =[tB Eigenvectorlambda3B];
-
-EigenvaluesBs               = Eigenvaluestypes.lambda;
-EigenvaluesBs(~NullsEigen.eigBs,:)= NaN;
-tBs                        =ttt;
-tBs(~NullsEigen.eigBs,1)          =NaN;
-Nulls.Eigenvalues.Bs             =[tBs EigenvaluesBs];
-
-Eigenvectorlambda1Bs               = Eigenvaluestypes.eigenvectors.lambda1;
-Eigenvectorlambda1Bs(~NullsEigen.eigBs,:)= NaN;
-Eigenvectorlambda2Bs               = Eigenvaluestypes.eigenvectors.lambda2;
-Eigenvectorlambda2Bs(~NullsEigen.eigBs,:)= NaN;
-Eigenvectorlambda3Bs               = Eigenvaluestypes.eigenvectors.lambda3;
-Eigenvectorlambda3Bs(~NullsEigen.eigBs,:)= NaN;
-Nulls.Eigenvector.Bs.lambda1              =[tBs Eigenvectorlambda1Bs];
-Nulls.Eigenvector.Bs.lambda2              =[tBs Eigenvectorlambda2Bs];
-Nulls.Eigenvector.Bs.lambda3              =[tBs Eigenvectorlambda3Bs];
-
-
-Eigenvaluesx               = Eigenvaluestypes.lambda;
-Eigenvaluesx(~NullsEigen.eigx,:)= NaN;
-tx                         =ttt;
-tx(~NullsEigen.eigx,1)          =NaN;
-Nulls.Eigenvalues.x              =[tx Eigenvaluesx];
-
-Eigenvectorlambda1x               = Eigenvaluestypes.eigenvectors.lambda1;
-Eigenvectorlambda1x(~NullsEigen.eigx,:)= NaN;
-Eigenvectorlambda2x               = Eigenvaluestypes.eigenvectors.lambda2;
-Eigenvectorlambda2x(~NullsEigen.eigx,:)= NaN;
-Eigenvectorlambda3x               = Eigenvaluestypes.eigenvectors.lambda3;
-Eigenvectorlambda3x(~NullsEigen.eigx,:)= NaN;
-Nulls.Eigenvector.x.lambda1              =[tx Eigenvectorlambda1x];
-Nulls.Eigenvector.x.lambda2              =[tx Eigenvectorlambda2x];
-Nulls.Eigenvector.x.lambda3              =[tx Eigenvectorlambda3x];
-
-Eigenvalueso               = Eigenvaluestypes.lambda;
-Eigenvalueso(~NullsEigen.eigo,:)= NaN;
-to                         =ttt;
-to(~NullsEigen.eigo,1)          =NaN;
-Nulls.Eigenvalues.o              =[to Eigenvalueso];
-
-Eigenvectorlambda1o               = Eigenvaluestypes.eigenvectors.lambda1;
-Eigenvectorlambda1o(~NullsEigen.eigo,:)= NaN;
-Eigenvectorlambda2o               = Eigenvaluestypes.eigenvectors.lambda2;
-Eigenvectorlambda2o(~NullsEigen.eigo,:)= NaN;
-Eigenvectorlambda3o               = Eigenvaluestypes.eigenvectors.lambda3;
-Eigenvectorlambda3o(~NullsEigen.eigo,:)= NaN;
-Nulls.Eigenvector.o.lambda1              =[to Eigenvectorlambda1o];
-Nulls.Eigenvector.o.lambda2              =[to Eigenvectorlambda2o];
-Nulls.Eigenvector.o.lambda3              =[to Eigenvectorlambda3o];
-
-Eigenvaluesunknown              = Eigenvaluestypes.lambda;
-Eigenvaluesunknown(~NullsEigen.unknown,:)= NaN;
-tunknown                          =ttt;
-tunknown(~NullsEigen.unknown,1)          =NaN;
-Nulls.Eigenvalues.unknown        =[tunknown Eigenvaluesunknown];
-
-Eigenvectorlambda1unknown               = Eigenvaluestypes.eigenvectors.lambda1;
-Eigenvectorlambda1unknown(~NullsEigen.unknown,:)= NaN;
-Eigenvectorlambda2unknown               = Eigenvaluestypes.eigenvectors.lambda2;
-Eigenvectorlambda2unknown(~NullsEigen.unknown,:)= NaN;
-Eigenvectorlambda3unknown               = Eigenvaluestypes.eigenvectors.lambda3;
-Eigenvectorlambda3unknown(~NullsEigen.unknown,:)= NaN;
-Nulls.Eigenvector.unknown.lambda1              =[tunknown Eigenvectorlambda1unknown];
-Nulls.Eigenvector.unknown.lambda2              =[tunknown Eigenvectorlambda2unknown];
-Nulls.Eigenvector.unknown.lambda3              =[tunknown Eigenvectorlambda3unknown];
-
-%A
-distanceANull                         = dRmin;
-distanceANull(~NullsEigen.eigA,2)          = NaN;
-distanceANull(~sortdr,2)              = NaN;
-
-positionANull                         = Rn;
-positionANull(~NullsEigen.eigA,:)          = NaN;
-
-gradBA                                = gradB;
-gradBA(~NullsEigen.eigA,:)            = NaN;
-
-%B
-distanceBNull                         = dRmin;
-distanceBNull(~NullsEigen.eigB,2)          = NaN;
-distanceBNull(~sortdr,2)              = NaN;
-
-positionBNull                         = Rn;
-positionBNull(~NullsEigen.eigB,:)     = NaN;
-
-gradBB                                = gradB;
-gradBB(~NullsEigen.eigB,:)            = NaN;
-%X
-distanceXNull                         = dRmin;
-distanceXNull(~NullsEigen.eigx,2)     = NaN;
-distanceXNull(~sortdr,2)              = NaN;
-
-positionXNull                         = Rn;
-positionXNull(~NullsEigen.eigx,:)     = NaN;
-
-gradBx                                = gradB;
-gradBx(~NullsEigen.eigx,:)            = NaN;
-%Bs
-distanceBsNull                        = dRmin;
-distanceBsNull(~NullsEigen.eigBs,2)   = NaN;
-distanceBsNull(~sortdr,2)             = NaN;
-
-positionBsNull                        = Rn;
-positionBsNull(~NullsEigen.eigBs,:)   = NaN;
-
-gradBBs                               = gradB;
-gradBBs(~NullsEigen.eigBs,:)          = NaN;
-%As
-distanceAsNull                        = dRmin;
-distanceAsNull(~NullsEigen.eigAs,2)   = NaN;
-distanceAsNull(~sortdr,2)             = NaN;
-
-positionAsNull                        = Rn;
-positionAsNull(~NullsEigen.eigAs,:)   = NaN;
-
-gradBAs                               = gradB;
-gradBAs(~NullsEigen.eigAs,:)          = NaN;
-%O
-distanceONull                         = dRmin;
-distanceONull(~NullsEigen.eigo,2)     = NaN;
-distanceONull(~sortdr,2)              = NaN;
-
-positionONull                         = Rn;
-positionONull(~NullsEigen.eigo,:)     = NaN;
-
-gradBo                                = gradB;
-gradBo(~NullsEigen.eigo,:)            = NaN;
-%Unknown type
-distanceUnknownNull                   = dRmin;
-distanceUnknownNull(~NullsEigen.unknown,2) = NaN;
-distanceUnknownNull(~sortdr,2)        = NaN;
-
-positionUnknownNull                         = Rn;
-positionUnknownNull(~NullsEigen.unknown,:)       = NaN;
-gradBunknown                                = gradB;
-gradBunknown(~NullsEigen.unknown,:)            = NaN;
-
-Nulls.NullType.distance.A       = distanceANull;
-Nulls.NullType.distance.B       = distanceBNull;
-Nulls.NullType.distance.As      = distanceAsNull;
-Nulls.NullType.distance.Bs      = distanceBsNull;
-Nulls.NullType.distance.unknown = distanceUnknownNull;
-Nulls.NullType.distance.x       = distanceXNull;
-Nulls.NullType.distance.o       = distanceONull;
-
-Nulls.NullType.position.A       = positionANull;
-Nulls.NullType.position.B       = positionBNull;
-Nulls.NullType.position.As      = positionAsNull;
-Nulls.NullType.position.Bs      = positionBsNull;
-Nulls.NullType.position.unknown = positionUnknownNull;
-Nulls.NullType.position.x       = positionXNull;
-Nulls.NullType.position.o       = positionONull;
-
-Nulls.NullType.gradB.A       = gradBA;
-Nulls.NullType.gradB.B       = gradBB;
-Nulls.NullType.gradB.As      = gradBAs;
-Nulls.NullType.gradB.Bs      = gradBBs;
-Nulls.NullType.gradB.unknown = gradBunknown;
-Nulls.NullType.gradB.x       = gradBx;
-Nulls.NullType.gradB.o       = gradBo;
+Nulls.Distance=dRmin;
 
 Nulls.Requirement.BfieldandEigenvalueslessthanchosenpercentage=constraint;
 Nulls.Requirement.DistancewithinSCconfiguration=sortdr;
@@ -582,6 +415,4 @@ errors.eigval=eigVal_err;
 errors.curlometer=err_4C;
 Current.jPerpendicular=jPerpendicular;
 Current.jParallel=jParallel;
-Current.jPerpendicularabs=jPerpendicularabs;
-Current.jParallelabs=jParallelabs;
 end
