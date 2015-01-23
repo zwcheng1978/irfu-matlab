@@ -8,7 +8,8 @@ function angle=solidangle(VecA,VecB,VecC)
 %
 % Important: Time tags cannot be included in the input vectors 
 % See Also POINCARE_INDEX_3D
-%Reference: Greene 1992 JCP (98) p.194-198
+%Reference: Råde & Westergren (2004), Mathematics Handbook for Science and
+%Engineering p.75 (Law of Cosine)
 
 %--------written by E.Eriksson--------------------------------------------
 
@@ -29,13 +30,13 @@ end
 a=acos(dot(VecC,VecB,2)); 
 b=acos(dot(VecA,VecC,2)); 
 c=acos(dot(VecB,VecA,2)); 
-%Calculate the angles in the spherical triangle
+%Calculate the angles in the spherical triangle (Law of Cosines)
 A=acos((cos(a)-cos(b).*cos(c))./(sin(b).*sin(c)));
 B=acos((cos(b)-cos(a).*cos(c))./(sin(a).*sin(c)));
 C=acos((cos(c)-cos(b).*cos(a))./(sin(b).*sin(a)));
 
-%Calculates the Surface area of a spherical triangle
-angle=(A+B+C-pi); %Surface area of a spherical triangle in a unit sphere=solid angle
+%Calculates the Surface area on the unit sphere (solid angle)
+angle=(A+B+C-pi); 
 %Calculate the sign of the area
 var=cross(VecC,VecB,2);
 div=dot(var,VecA,2);

@@ -1,5 +1,6 @@
 function [Modeldata]=B_R_null_model(a,stat_loops,steps,q,p,jperp,jparall,onesign,s,name)
-%B_R_NULL_MODEL - Creates a simple model of linear B-field and position (R)
+%B_R_NULL_MODEL - Creates a simple model of linear B-field and with a
+%tetrahedron s/c formation
 %taken from real data and calculates the number of different nulltypes
 %found when a disturbance is added to a chosen satellite.
 
@@ -7,13 +8,28 @@ function [Modeldata]=B_R_null_model(a,stat_loops,steps,q,p,jperp,jparall,onesign
 %that has been rotated into the nulls coordinate system. See
 %ROTATION_OF_GRADBDATA_TO_MODEL_PARAMETERS for more details
 %INPUT
+%a is the edge length for the tetrahedron. Satellite 1 is always along the
+%spine, satellite 2 and 3 are in the x-y plane and mirror to each other
+%while satellite 4 is along the x axis (resultant current).
+%Stat_loops determines how many times you want to run each amplitude for
+%statistical spread due to random function used for the disturbance.
+%steps gives the number of steps you want to increase the amplitude in.
+%q determines the shape of the x-line,
+%p determines the shape of the in and out flow of the magnetic field.
 % jperp is the current perpendicular to the spine of the null and jparall is the
 % current parallel to the spine of the null. s is the scaling parameter
 % that is used to make the parameters unitless. onesign is the sign of the
 % gradB(1,1) value. name is the name (in string) that you want to save the
 % file as.
 %OUTPUT
-%Modeldata is a structure that contains
+%Modeldata is a structure that contains the number of each type that is
+%found within the spacecraft box created by the maximum and minimum
+%positions of the tetrahedron. It also contains all values given as input
+%to the model. All except jthresh are unitless (jthresh is in nT/km). The
+%structure also contains the ratio between each amplitude and the length
+%between maximum and minimum magnetic field strength for all satellites in
+%each direction (x,y,z) and the absolute strength. You also get the total
+%number of nulls found within the s/c box in Modeldata.NumberofNulls.
 
 %--------written by E.Eriksson--------------------------------------------
 
@@ -262,7 +278,7 @@ for iii=1:steps
             NumberofType.x=x;
             NumberofType.o=o;
             
-            NumberofNullsError=numberofnullserror;
+            NumberofNullserr=numberofnullserror;
             
             %PositionError.x=xerror;
             %PositionError.y=yerror;
@@ -289,7 +305,7 @@ for iii=1:steps
             NumberofType.o(length(NumberofType.o(:,1))+1:length(o(:,1))+length(NumberofType.o(:,1)),:)=o;
             NumberofType.unknown(length(NumberofType.unknown(:,1))+1:length(unknown(:,1))+length(NumberofType.unknown(:,1)),:)=unknown;
             
-            NumberofNullsError(length(NumberofNullsError(:,1))+1:length(numberofnullserror(:,1))+length(NumberofNullsError(:,1)),:)=numberofnullserror;
+            NumberofNullserr(length(NumberofNullserr(:,1))+1:length(numberofnullserror(:,1))+length(NumberofNullserr(:,1)),:)=numberofnullserror;
             
             %PositionError.x(length(PositionError.x(:,1))+1:length(xerror(:,1))+length(PositionError.x(:,1)),:)=xerror;
             %PositionError.y(length(PositionError.y(:,1))+1:length(yerror(:,1))+length(PositionError.y(:,1)),:)=yerror;
@@ -327,7 +343,7 @@ for iii=1:steps
         
         Modeldata.Eigenvalues=[landa1 landa2 landa3];
         
-        Modeldata.NumberofNullsError=NumberofNullsError;
+        Modeldata.NumberofNulls=NumberofNullserr;
         
         Modeldata.scale.p=p;
         Modeldata.scale.q=q;
@@ -373,7 +389,7 @@ for iii=1:steps
         Modeldata.NumberofType.o(:,length(Modeldata.NumberofType.o(1,:))+1:1+length(Modeldata.NumberofType.o(1,:)))=NumberofType.o(:,2);
         Modeldata.NumberofType.unknown(:,length(Modeldata.NumberofType.unknown(1,:))+1:1+length(Modeldata.NumberofType.unknown(1,:)))=NumberofType.unknown(:,2);
         
-        Modeldata.NumberofNullsError(:,length(Modeldata.NumberofNullsError(1,:))+1:1+length(Modeldata.NumberofNullsError(1,:)))=NumberofNullsError(:,2);
+        Modeldata.NumberofNulls(:,length(Modeldata.NumberofNulls(1,:))+1:1+length(Modeldata.NumberofNulls(1,:)))=NumberofNullserr(:,2);
         
         %Modeldata.PositionError.x(:,length(Modeldata.PositionError.x(1,:))+1:1+length(Modeldata.PositionError.x(1,:)))=PositionError.x(:,3);
         %Modeldata.PositionError.y(:,length(Modeldata.PositionError.y(1,:))+1:1+length(Modeldata.PositionError.y(1,:)))=PositionError.y(:,3);
