@@ -15,7 +15,11 @@ function [timeIntervalWithinInterval, timeIntervalsOfInterest]=c_4_null_sorting(
 %to save the data as.
 %
 %   [timeIntervalWithinInterval, timeIntervalsOfInterest]=C_4_NULL_SORTING(tint,tailBoxX,tailBoxDZ,tailBoxDY,d_i,length_values)
-%   
+%OUTPUT:
+%timeIntervalWithinInterval gives the time interval within
+%timeIntervalsOfInterest where nulls where found.
+%timeIntervalsOfInterest gives the time intervals where more than 2/3 of
+%the time interval had nulls in it.
 %
 %See Also C_4_NULL
 
@@ -130,7 +134,6 @@ timeIntervalsOfInterest(~scSeparationFulfilled,:)=NaN;
 disp('Starting calculation based on the magnetic field and position of the null');
 nullPositionFulfilled = false(length(timeIntervalsOfInterest(:,1)),1);
 timeIntervalWithinInterval = zeros(length(timeIntervalsOfInterest(:,1)),2);
-datagap=zeros(1,2);
 count=0;
 for iTimeInterval2=1:length(timeIntervalsOfInterest(:,1))
 tint=timeIntervalsOfInterest(iTimeInterval2,:); %Goes through each tint every loop
@@ -154,39 +157,6 @@ R1 = local.c_read('sc_pos_xyz_gse__C1_CP_FGM_FULL',tint);
 R2 = local.c_read('sc_pos_xyz_gse__C2_CP_FGM_FULL',tint);
 R3 = local.c_read('sc_pos_xyz_gse__C3_CP_FGM_FULL',tint);
 R4 = local.c_read('sc_pos_xyz_gse__C4_CP_FGM_FULL',tint);
-
-if isempty(B1)
-    datagap(iTimeInterval2,:)=tint;
-    continue
-end
-if isempty(B2)
-    datagap(iTimeInterval2,:)=tint;
-    continue
-end
-if isempty(B3)
-    datagap(iTimeInterval2,:)=tint;
-    continue
-end
-if isempty(B4)
-    datagap(iTimeInterval2,:)=tint;
-    continue
-end
-if isempty(R1)
-   datagap(iTimeInterval2)=tint;
-    continue
-end
-if isempty(R2)
-    datagap(iTimeInterval2,:)=tint;
-    continue
-end
-if isempty(R3)
-    datagap(iTimeInterval2,:)=tint;
-    continue
-end
-if isempty(R4)
-    datagap(iTimeInterval2,:)=tint;
-    continue
-end
 
 R1=irf_gse2gsm(R1);
 R2=irf_gse2gsm(R2);
