@@ -6,14 +6,16 @@ function Nulls=c_4_null(R1,R2,R3,R4,B1,B2,B3,B4,varargin)
 %   null can be determined by considering a Taylor
 %   expansion of the lowest order of B about the null.
 %
-%   Nulls=C_4_NULL(R1,R2,R3,R4,B1,B2,B3,B4);
-%   Nulls=C_4_NULL(R1,R2,R3,R4,B1,B2,B3,B4, threshold,length_value);
+%   Nulls=C_4_NULL(R1,R2,R3,R4,dRm,B1,B2,B3,B4);
+%   Nulls=C_4_NULL(R1,R2,R3,R4,dRm,B1,B2,B3,B4, threshold,length_value);
 
 %   INPUT
 %   B? = the B-field measured at satellite ?: column 1 - time
 %   column 2-4 B-field in x,y,z direction
 %   R? = the satellite ? position in GSM coordinate system: column 1 - time
 %   column 2-4 satellite position in x,y,z direction
+%   dRm gives the position of the "mass centrum" of the
+%   tetrahedron
 %   -threshold=100 means no restriction. Default value for the length
 %   is 1000km. The value needs to be given in km. The length_value gives the maximum length of box created to look for the nulls.
 %   If a thresholdvor length value is given you need to also give the other value
@@ -50,10 +52,13 @@ function Nulls=c_4_null(R1,R2,R3,R4,B1,B2,B3,B4,varargin)
 %   their eigenvalues.
 %
 %   Nulls.Rnull contains the position of the null for each time tag from each
-%   satellite where Rn? gives the position from satellite ?.
+%   satellite where Rn? gives the position from satellite ?. Also contains
+%   DRm the distance from masscentrum to the null position.
 %    
 %   Nulls.Distance = [Time dRmin] Gives the minimum distance to the null point
 %   looking from all satellites
+%
+%   Nulls.dR1 = [time dR] Gives the distance from satellite 1 to the null.
 %
 %   Nulls.C4limits is a structure containing the maxmimum and minimum positions
 %   of all satellites at each time tag for each direction (x,y,z).
@@ -106,6 +111,16 @@ R4 = irf_resamp(R4,B1);
 %Check which type the nulls are
 [NullsEigen,Eigenvaluestypes,Current,constraint,errors]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold);
 
+Ravx=mean([R1(:,2) R2(:,2) R3(:,2) R4(:,2)],2);
+Ravy=mean([R1(:,3) R2(:,3) R3(:,3) R4(:,3)],2);
+Ravz=mean([R1(:,4) R2(:,4) R3(:,4) R4(:,4)],2);
+Rm=[R1(:,1) Ravx Ravy Ravz];
+
+Bavx=mean([B1(:,2) B2(:,2) B3(:,2) B4(:,2)],2);
+Bavy=mean([B1(:,3) B2(:,3) B3(:,3) B4(:,3)],2);
+Bavz=mean([B1(:,4) B2(:,4) B3(:,4) B4(:,4)],2);
+Bm=[B1(:,1) Bavx Bavy Bavz];
+
 %Calculates the gradB used in the taylor expansion
 gradB = c_4_grad('R?','B?','grad');
 %Calculates the current that is saved for comparison with model
@@ -116,6 +131,7 @@ dR1=zeros(length(gradB(:,1)),4);
 dR2=zeros(length(gradB(:,1)),4);
 dR3=zeros(length(gradB(:,1)),4);
 dR4=zeros(length(gradB(:,1)),4);
+dRm=zeros(length(gradB(:,1)),4);
 %First need to calculate how far from each satellite the null is using
 %Taylor Expansion
 for i=1:length(gradB(:,1))
@@ -127,6 +143,7 @@ for i=1:length(gradB(:,1))
     dR2(i,2:4) = B2(i,2:4)/(deltaBnull');
     dR3(i,2:4) = B3(i,2:4)/(deltaBnull');
     dR4(i,2:4) = B4(i,2:4)/(deltaBnull');
+    dRm(i,2:4) = Bm(i,2:4)/(deltaBnull');
 end
 %Add time
 Time=B1(:,1);
@@ -134,6 +151,7 @@ dR1(:,1)=Time;
 dR2(:,1)=Time;
 dR3(:,1)=Time;
 dR4(:,1)=Time;
+dRm(:,1)=Time;
 
 %The length from each satellite to the null
 dRmag1 = irf_abs(dR1);
@@ -150,6 +168,8 @@ Rn1 = irf_add(1,R1,-1,dR1);  %R1-dR1
 Rn2 = irf_add(1,R2,-1,dR2);
 Rn3 = irf_add(1,R3,-1,dR3);
 Rn4 = irf_add(1,R4,-1,dR4);
+Rnm = irf_add(1,Rm,-1,dRm);
+
 %Null coordinates
 xn = Rn1(:,2);
 yn = Rn1(:,3);
@@ -165,7 +185,6 @@ minY = min(([R1(:,3) R2(:,3) R3(:,3) R4(:,3)]),[],2);
 maxY = max(([R1(:,3) R2(:,3) R3(:,3) R4(:,3)]),[],2);
 minZ = min(([R1(:,4) R2(:,4) R3(:,4) R4(:,4)]),[],2);
 maxZ = max(([R1(:,4) R2(:,4) R3(:,4) R4(:,4)]),[],2);
-
 
 %For each eigenvalue corresponding to the tolerance level (the two errors less or equal to 40%) break out their corresponding time and dR value
 %(the minimum distance from all s/c to the null)
@@ -183,6 +202,10 @@ index(~sortdr,:)=NaN;
 index(~constraint,:) = NaN;
 Nulls.pindex=index;
 Nulls.errors=errors;
+
+dR1(~sortdr,:)=NaN;
+dR1(~constraint,:) = NaN;
+Nulls.dR1=dR1;
 
 Current.jParallel(~sortdr,:)=NaN;
 Nulls.current.jParallel=Current.jParallel;
@@ -249,6 +272,12 @@ Rn3(~sortdr,:)     = NaN;
 Rn4(~constraint,:) = NaN;
 Rn4(~sortdr,:)     = NaN;
 
+Rnm(~constraint,:) = NaN;
+Rnm(~sortdr,:)     = NaN;
+
+dRm(~constraint,:) = NaN;
+dRm(~sortdr,:)     = NaN;
+
 %dRmin
 dRmin(~constraint,2)= NaN;
 
@@ -272,6 +301,8 @@ Nulls.Rnull.Rn1=Rn1;
 Nulls.Rnull.Rn2=Rn2;
 Nulls.Rnull.Rn3=Rn3;
 Nulls.Rnull.Rn4=Rn4;
+Nulls.Rnull.Rnm=Rnm;
+Nulls.Rnull.dRm=dRm;
 end
 
 function [NullsEigen,Eigenvalues,Current,constraint,errors]=c_4_null_type(R1,R2,R3,R4,B1,B2,B3,B4,threshold)
@@ -307,7 +338,7 @@ gradB=c_4_grad(R1,R2,R3,R4,B1,B2,B3,B4);
 %Error in percentage - estimate if linear interpolation is valid to use
 [divB,~]=c_4_grad('R?','B?','div');
 
-err_4C=irf_multiply(1,real(divB),1,[divB(:,1) real(max(gradB(:,2:end),[],2))],-1); 
+err_4C=irf_multiply(1,divB,1,[divB(:,1) max(gradB(:,2:end),[],2)],-1); 
 err_4C(:,2)=abs(err_4C(:,2))*100;
 err_4C(:,1)=B1(:,1);
 
